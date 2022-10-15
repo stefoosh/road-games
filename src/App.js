@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, {useEffect, useState} from "react";
 import Map from "./Map";
 import { Layers, TileLayer, VectorLayer } from "./Layers";
-import { Style, Icon } from "ol/style";
+import { Style, Icon, Text, Fill, Stroke } from "ol/style";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import { osm, vector } from "./Source";
@@ -9,6 +9,7 @@ import { fromLonLat, get } from "ol/proj";
 // import GeoJSON from "ol/format/GeoJSON";
 import { Controls, FullScreenControl } from "./Controls";
 // import FeatureStyles from "./Features/Styles";
+import Form from "react-bootstrap/Form";
 
 import mapConfig from "./config.json";
 import "./App.css";
@@ -45,8 +46,36 @@ const App = () => {
 
   const [features, setFeatures] = useState(addMarkers(markersLonLat));
 
+  const currentYearMonthDay = new Date().toISOString().split('T')[0];
+  const [startDate, setStartDate] = useState(currentYearMonthDay);
+  const [endDate, setEndDate] = useState(currentYearMonthDay);
+
+  const searchDateRange = () => {
+    console.log("StartDate", startDate);
+    console.log("EndDate", endDate);
+
+  }
+
   return (
     <div>
+        <label htmlFor="startdate">Lower Bound</label>
+        <input
+            type="date"
+            name="startdate"
+            placeholder="Start date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+        />
+        <label htmlFor="enddate">Upper Bound</label>
+        <input
+            type="date"
+            name="enddate"
+            placeholder="End date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+        />
+        <button type="submit" className="btn btn-primary mb-3" onClick={() => searchDateRange()}>Confirm identity</button>
+
       <Map center={fromLonLat(center)} zoom={zoom}>
         <Layers>
           <TileLayer source={osm()} zIndex={0} />
@@ -93,14 +122,13 @@ const App = () => {
       {/*  Wyandotte County*/}
       </div>
       <hr />
-      <div>
-        <input
-          type="checkbox"
-          checked={showMarker}
-          onChange={(event) => setShowMarker(event.target.checked)}
-        />{" "}
-        Show markers
-      </div>
+
+          <input
+              type="checkbox"
+              checked={showMarker}
+              onChange={(event) => setShowMarker(event.target.checked)}
+          />{" "}
+          Show markers
     </div>
   );
 };
