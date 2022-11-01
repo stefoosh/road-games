@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
+
+import 'react-popper/dist/index.umd.min';
 import 'bootstrap/dist/css/bootstrap.css';
 
 ReactDOM.render(

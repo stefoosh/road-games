@@ -1,134 +1,82 @@
-import React, {useEffect, useState} from "react";
-import Map from "./Map";
-import { Layers, TileLayer, VectorLayer } from "./Layers";
-import { Style, Icon, Text, Fill, Stroke } from "ol/style";
-import Feature from "ol/Feature";
-import Point from "ol/geom/Point";
-import { osm, vector } from "./Source";
-import { fromLonLat, get } from "ol/proj";
-// import GeoJSON from "ol/format/GeoJSON";
-import { Controls, FullScreenControl } from "./Controls";
-// import FeatureStyles from "./Features/Styles";
-import Form from "react-bootstrap/Form";
+import React, { useEffect, useState } from "react";
 
-import mapConfig from "./config.json";
+import { fromLonLat } from "ol/proj";
+import * as olSource from "ol/source";
+
+import "ol/ol.css";
 import "./App.css";
 
-// const geojsonObject = mapConfig.geojsonObject;
-// const geojsonObject2 = mapConfig.geojsonObject2;
-const markersLonLat = [mapConfig.KauffmanStadium, mapConfig.BuschStadium, mapConfig.tulsa];
+import Map from "./Map/Map";
+import TileLayer from "./Features/TileLayer";
+import FullScreenControl from "./Features/FullScreenControl";
+import { SportingEvent } from "./Api/propTypes";
 
-const addMarkers = (lonLatArray) => {
-  var iconStyle = new Style({
-    image: new Icon({
-      anchorXUnits: "fraction",
-      anchorYUnits: "pixels",
-      src: mapConfig.markerImage32,
-    }),
-  });
-  let features = lonLatArray.map((item) => {
-    let feature = new Feature({
-      geometry: new Point(fromLonLat(item)),
-    });
-    feature.setStyle(iconStyle);
-    return feature;
-  });
-  return features;
-}
+import * as bootstrap from "bootstrap";
+import PopOverlay from "./Features/PopOverlay";
+window.bootstrap = bootstrap;
 
 const App = () => {
-  const [center, setCenter] = useState(mapConfig.center);
-  const [zoom, setZoom] = useState(6);
+  const layerSource = new olSource.OSM();
+  const munster = [7.62571, 51.96236];
+  const [center, setCenter] = useState(munster);
+  const [zoom, setZoom] = useState(5);
 
-  // const [showLayer1, setShowLayer1] = useState(true);
-  // const [showLayer2, setShowLayer2] = useState(true);
-  const [showMarker, setShowMarker] = useState(true);
+  const sportingEvents = [
+    new SportingEvent(696969, [16.3725, 48.208889], "Vienna Action", "I am content"),
+    new SportingEvent(123, [8.80777, 53.07516], "Bremen Fußball", "Herkunft"),
+  ];
 
-  const [features, setFeatures] = useState(addMarkers(markersLonLat));
-
-  const currentYearMonthDay = new Date().toISOString().split('T')[0];
+  const currentYearMonthDay = new Date().toISOString().split("T")[0];
   const [startDate, setStartDate] = useState(currentYearMonthDay);
   const [endDate, setEndDate] = useState(currentYearMonthDay);
 
   const searchDateRange = () => {
-    console.log("StartDate", startDate);
-    console.log("EndDate", endDate);
-
-  }
+    console.debug("StartDate", startDate);
+    console.debug("EndDate", endDate);
+  };
 
   return (
     <div>
-        <label htmlFor="startdate">Lower Bound</label>
-        <input
-            type="date"
-            name="startdate"
-            placeholder="Start date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-        />
-        <label htmlFor="enddate">Upper Bound</label>
-        <input
-            type="date"
-            name="enddate"
-            placeholder="End date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-        />
-        <button type="submit" className="btn btn-primary mb-3" onClick={() => searchDateRange()}>Confirm identity</button>
-
-      <Map center={fromLonLat(center)} zoom={zoom}>
-        <Layers>
-          <TileLayer source={osm()} zIndex={0} />
-          {/*{showLayer1 && (*/}
-          {/*  <VectorLayer*/}
-          {/*    source={vector({*/}
-          {/*      features: new GeoJSON().readFeatures(geojsonObject, {*/}
-          {/*        featureProjection: get("EPSG:3857"),*/}
-          {/*      }),*/}
-          {/*    })}*/}
-          {/*    style={FeatureStyles.MultiPolygon}*/}
-          {/*  />*/}
-          {/*)}*/}
-          {/*{showLayer2 && (*/}
-          {/*  <VectorLayer*/}
-          {/*    source={vector({*/}
-          {/*      features: new GeoJSON().readFeatures(geojsonObject2, {*/}
-          {/*        featureProjection: get("EPSG:3857"),*/}
-          {/*      }),*/}
-          {/*    })}*/}
-          {/*    style={FeatureStyles.MultiPolygon}*/}
-          {/*  />*/}
-          {/*)}*/}
-          {showMarker && <VectorLayer source={vector({ features })} />}
-        </Layers>
-        <Controls>
-          <FullScreenControl />
-        </Controls>
+      <label htmlFor="startdate">Lower Bound</label>
+      <input
+        type="date"
+        name="startdate"
+        placeholder="Start date"
+        value={startDate}
+        onChange={(e) => setStartDate(e.target.value)}
+      />
+      <label htmlFor="enddate">Upper Bound</label>
+      <input
+        type="date"
+        name="enddate"
+        placeholder="End date"
+        value={endDate}
+        onChange={(e) => setEndDate(e.target.value)}
+      />
+      <button type="submit" className="btn btn-primary mb-3" onClick={() => searchDateRange()}>
+        Search
+      </button>
+      <Map center={fromLonLat(center)} zoom={zoom} sportingEvents={sportingEvents}>
+        <TileLayer source={layerSource} zIndex={0} />
+        <FullScreenControl />
       </Map>
-      <div>
-      {/*  <input*/}
-      {/*    type="checkbox"*/}
-      {/*    checked={showLayer1}*/}
-      {/*    onChange={(event) => setShowLayer1(event.target.checked)}*/}
-      {/*  />{" "}*/}
-      {/*  Johnson County*/}
-      {/*</div>*/}
-      {/*<div>*/}
-      {/*  <input*/}
-      {/*    type="checkbox"*/}
-      {/*    checked={showLayer2}*/}
-      {/*    onChange={(event) => setShowLayer2(event.target.checked)}*/}
-      {/*  />{" "}*/}
-      {/*  Wyandotte County*/}
-      </div>
+      {sportingEvents ? (
+        sportingEvents.length > 0 ? (
+          sportingEvents.map((sportingEvent) => {
+            console.debug(sportingEvent);
+            return <PopOverlay key={sportingEvent.key} sportingEvent={sportingEvent} />;
+          })
+        ) : (
+          <div>
+            <p>No sporting events found</p>
+          </div>
+        )
+      ) : (
+        <div>
+          <p>loading sporting events</p>
+        </div>
+      )}
       <hr />
-
-          <input
-              type="checkbox"
-              checked={showMarker}
-              onChange={(event) => setShowMarker(event.target.checked)}
-          />{" "}
-          Show markers
     </div>
   );
 };
