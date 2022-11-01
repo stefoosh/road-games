@@ -4,7 +4,6 @@ import { fromLonLat } from "ol/proj";
 import * as olSource from "ol/source";
 
 import "ol/ol.css";
-import "./App.css";
 
 import Map from "./Map/Map";
 import TileLayer from "./Features/TileLayer";

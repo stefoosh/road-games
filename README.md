@@ -1,7 +1,6 @@
 # road-games
 
-Find games happening in a geographic region by date range
-
+Find sporting events in a geographic radius by date range
 
 ---
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
