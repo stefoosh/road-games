@@ -1,4 +1,7 @@
-hella werld
+# road-games
+
+Find games happening in a geographic region by date range
+
 
 ---
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
