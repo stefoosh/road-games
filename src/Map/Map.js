@@ -42,6 +42,9 @@ const Map = ({ children, zoom, center, sportingEvents }) => {
 
   useEffect(() => {
     if (map) {
+      // compare existing overlays with "future" overlays and don't clear b/c the Search button was clicked twice
+      map.getOverlays().clear();
+
       sportingEvents.forEach((sportingEvent) => {
         const marker = new Overlay({
           position: fromLonLat(sportingEvent.lonLat),
@@ -60,7 +63,7 @@ const Map = ({ children, zoom, center, sportingEvents }) => {
     } else {
       console.debug("Map: waiting for map to render");
     }
-  }, [map]);
+  }, [map, sportingEvents]);
 
   return (
     <MapContext.Provider value={{ map }}>
