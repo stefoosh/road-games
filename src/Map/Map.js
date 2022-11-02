@@ -10,6 +10,8 @@ import MapContext from "./MapContext";
 import { SportingEvent } from "../Api/propTypes";
 
 const Map = ({ children, zoom, center, sportingEvents }) => {
+  const consoleDebug = (message) => console.debug(`Map: ${message}`);
+
   const mapRef = useRef();
   const [map, setMap] = useState(null);
 
@@ -40,10 +42,18 @@ const Map = ({ children, zoom, center, sportingEvents }) => {
     map.getView().setCenter(center);
   }, [center]);
 
+  const overlayHash = (overlays) => {
+    let sum = 0.0;
+    overlays.forEach((overlay) => {
+      sum += parseFloat(overlay.getPosition()[0]) + parseFloat(overlay.getPosition()[1]);
+    });
+    return sum;
+  };
+
   useEffect(() => {
     if (map) {
-      // compare existing overlays with "future" overlays and don't clear b/c the Search button was clicked twice
-      map.getOverlays().clear();
+      const oldHash = overlayHash(map.getOverlays());
+      const newOverlays = [];
 
       sportingEvents.forEach((sportingEvent) => {
         const marker = new Overlay({
@@ -52,16 +62,30 @@ const Map = ({ children, zoom, center, sportingEvents }) => {
           element: document.getElementById(sportingEvent.markerId),
           stopEvent: false,
         });
-        map.addOverlay(marker);
+        newOverlays.push(marker);
 
         const label = new Overlay({
           position: fromLonLat(sportingEvent.lonLat),
           element: document.getElementById(sportingEvent.labelId),
         });
-        map.addOverlay(label);
+        newOverlays.push(label);
+      });
+
+      const newHash = overlayHash(newOverlays);
+
+      if (oldHash === 0) {
+        consoleDebug("First render");
+      } else if (oldHash === newHash) {
+        consoleDebug("These overlays are the same");
+      } else {
+        consoleDebug("Change of overlays");
+        map.getOverlays().clear();
+      }
+      newOverlays.forEach((newOverlay) => {
+        map.addOverlay(newOverlay);
       });
     } else {
-      console.debug("Map: waiting for map to render");
+      consoleDebug("Rendering");
     }
   }, [map, sportingEvents]);
 
