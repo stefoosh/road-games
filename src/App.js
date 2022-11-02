@@ -14,6 +14,8 @@ import DateSelectorInput from "./Features/DateSelectorInput";
 import { SportingEvent } from "./Api/propTypes";
 
 const App = () => {
+  const consoleDebug = (message) => console.debug(`App: ${message}`);
+
   class MainAlert {
     constructor(variant, body) {
       this.variant = variant;
@@ -35,10 +37,8 @@ const App = () => {
 
   const mockFetch = () => {
     if (startDate === currentYearMonthDay && endDate === currentYearMonthDay) {
-      console.debug("Today was searched");
       setSportingEvents([new SportingEvent(1, [0.1276, 51.5072], "LondonPremiere", "Spurs")]);
     } else if (startDate === currentYearMonthDay && endDate === "2022-11-08") {
-      console.debug("B's b-day was searched");
       const mockApi = [
         new SportingEvent(696969, [16.3725, 48.208889], "Vienna Action", "I am content"),
         new SportingEvent(123, [8.80777, 53.07516], "Bremen Fußball", "Herkunft"),
@@ -50,10 +50,14 @@ const App = () => {
   };
 
   const searchDateRange = () => {
-    console.debug("startDate", startDate);
-    console.debug("endDate", endDate);
-    if (startDate === "" || endDate === "") {
-      setMainAlert(new MainAlert("warning", "Both start date and end date must be defined."));
+    consoleDebug(`start ${startDate}`);
+    consoleDebug(`end ${endDate}`);
+    if (startDate === "" || endDate === "" || startDate === undefined || endDate === undefined) {
+      setMainAlert(new MainAlert("warning", "Both start date and end date must be defined"));
+      return;
+    }
+    if (new Date(startDate).getTime() > new Date(endDate).getTime()) {
+      setMainAlert(new MainAlert("warning", "Start date must be before end date"));
       return;
     }
     mockFetch();
@@ -63,12 +67,28 @@ const App = () => {
     searchDateRange();
   }, []);
 
+  const convertYmdToHumanFormat = (yyyymmdd) => {
+    return new Date(yyyymmdd).toDateString();
+  };
+
   useEffect(() => {
-    const betweenDates = `sporting events between ${startDate} and ${endDate}`;
+    const eventPluralization = sportingEvents.length === 1 ? "event" : "events";
+    const start = convertYmdToHumanFormat(startDate);
+    const end = convertYmdToHumanFormat(endDate);
+
+    let betweenDatesMessage = `sporting ${eventPluralization} between ${start} and ${end}`;
+    if (startDate === endDate) {
+      if (startDate === currentYearMonthDay) {
+        betweenDatesMessage = `sporting ${eventPluralization} today`;
+      } else {
+        betweenDatesMessage = `sporting ${eventPluralization} on ${start}`;
+      }
+    }
+
     if (sportingEvents.length > 0) {
-      setMainAlert(new MainAlert("success", `Found ${sportingEvents.length} ${betweenDates}`));
+      setMainAlert(new MainAlert("success", `Found ${sportingEvents.length} ${betweenDatesMessage}`));
     } else {
-      setMainAlert(new MainAlert("secondary", `Found zero ${betweenDates}`));
+      setMainAlert(new MainAlert("secondary", `Found no ${betweenDatesMessage}`));
     }
   }, [sportingEvents]);
 
@@ -103,22 +123,12 @@ const App = () => {
         <TileLayer source={new OSM()} zIndex={0} />
         <FullScreenControl />
       </Map>
-      {sportingEvents ? (
-        sportingEvents.length > 0 ? (
-          sportingEvents.map((sportingEvent) => {
-            // console.debug(sportingEvent);
-            return <PopOverlay key={sportingEvent.key} sportingEvent={sportingEvent} />;
-          })
-        ) : (
-          <div>
-            <p>No sporting events found</p>
-          </div>
-        )
-      ) : (
-        <div>
-          <p>loading sporting events</p>
-        </div>
-      )}
+      {sportingEvents &&
+        sportingEvents.length > 0 &&
+        sportingEvents.map((sportingEvent) => {
+          // consoleDebug(sportingEvent);
+          return <PopOverlay key={sportingEvent.key} sportingEvent={sportingEvent} />;
+        })}
       <hr />
     </div>
   );
