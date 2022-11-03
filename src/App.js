@@ -16,6 +16,23 @@ import { SportingEvent } from "./Api/propTypes";
 const App = () => {
   const consoleDebug = (message) => console.debug(`App: ${message}`);
 
+  const [monoMode, setMonoMode] = useState(true);
+  const radioOne = "radioOne";
+  const radioTwo = "radioTwo";
+
+  const convertRawDateToDMY = (rawDateObject) => {
+    return rawDateObject.toISOString().split("T")[0];
+  };
+
+  const handleDateRadioChange = (event, source) => {
+    setMonoMode(source === radioOne);
+    if (source === radioTwo) {
+      const result = new Date(startDate);
+      result.setDate(result.getDate() + 1);
+      setEndDate(convertRawDateToDMY(result));
+    }
+  };
+
   class MainAlert {
     constructor(variant, body) {
       this.variant = variant;
@@ -24,13 +41,14 @@ const App = () => {
   }
   const [mainAlert, setMainAlert] = useState(new MainAlert("primary", "Welcome to Road Games"));
 
-  const currentYearMonthDay = new Date().toISOString().split("T")[0];
+  const currentYearMonthDay = convertRawDateToDMY(new Date());
   const [startDate, setStartDate] = useState(currentYearMonthDay);
   const [endDate, setEndDate] = useState(currentYearMonthDay);
 
   const resetToToday = () => {
     setStartDate(currentYearMonthDay);
     setEndDate(currentYearMonthDay);
+    setMonoMode(true);
   };
 
   const [sportingEvents, setSportingEvents] = useState([]);
@@ -67,14 +85,14 @@ const App = () => {
     searchDateRange();
   }, []);
 
-  const convertYmdToHumanFormat = (yyyymmdd) => {
-    return new Date(yyyymmdd).toDateString();
+  const convertMDYtoHumanFormat = (mdy) => {
+    return new Date(mdy).toDateString();
   };
 
   useEffect(() => {
     const eventPluralization = sportingEvents.length === 1 ? "event" : "events";
-    const start = convertYmdToHumanFormat(startDate);
-    const end = convertYmdToHumanFormat(endDate);
+    const start = convertMDYtoHumanFormat(startDate);
+    const end = convertMDYtoHumanFormat(endDate);
 
     let betweenDatesMessage = `sporting ${eventPluralization} between ${start} and ${end}`;
     if (startDate === endDate) {
@@ -97,40 +115,96 @@ const App = () => {
   const [zoom, setZoom] = useState(5);
 
   return (
-    <div>
-      <DateSelectorInput
-        name="startDate"
-        placeholder="Start Date"
-        value={startDate}
-        onChange={(e) => setStartDate(e.target.value)}
-      />
-      <DateSelectorInput
-        name="endDate"
-        placeholder="End Date"
-        value={endDate}
-        onChange={(e) => setEndDate(e.target.value)}
-      />
-      <button type="submit" className="btn btn-primary mb-3" onClick={() => searchDateRange()}>
-        Search
-      </button>
-      <button type="submit" className="btn btn-primary mb-3" onClick={() => resetToToday()}>
-        Reset to Today
-      </button>
-      <Alert key="main-alert" variant={mainAlert.variant}>
-        {mainAlert.body}
-      </Alert>
-      <Map center={fromLonLat(center)} zoom={zoom} sportingEvents={sportingEvents}>
-        <TileLayer source={new OSM()} zIndex={0} />
-        <FullScreenControl />
-      </Map>
-      {sportingEvents &&
-        sportingEvents.length > 0 &&
-        sportingEvents.map((sportingEvent) => {
-          // consoleDebug(sportingEvent);
-          return <PopOverlay key={sportingEvent.key} sportingEvent={sportingEvent} />;
-        })}
-      <hr />
-    </div>
+    <>
+      <div className="container-fluid">
+        <label htmlFor="exampleDataList" className="form-label">
+          Starting Point
+        </label>
+        <input
+          className="form-control"
+          list="datalistOptions"
+          id="exampleDataList"
+          placeholder="Select a country..."
+          onBlur={(e) => console.debug(e.target.value)}
+        />
+        <datalist id="datalistOptions">
+          <option value="San Francisco">🌉SF</option>
+          <option value="New York">NY</option>
+          <option value="Seattle">SEA</option>
+          <option value="Los Angeles">LA</option>
+          <option value="Chicago">CHI</option>
+        </datalist>
+
+        <input
+          type="radio"
+          className="btn-check"
+          name="options-outlined"
+          id="success-outlined"
+          autoComplete="off"
+          checked={monoMode}
+          onChange={(e) => handleDateRadioChange(e, radioOne)}
+        />
+        <label className="btn btn-outline-success" htmlFor="success-outlined">
+          Single Day
+        </label>
+        <input
+          type="radio"
+          className="btn-check"
+          name="options-outlined"
+          id="danger-outlined"
+          autoComplete="off"
+          checked={!monoMode}
+          onChange={(e) => handleDateRadioChange(e, radioTwo)}
+        />
+        <label className="btn btn-outline-danger" htmlFor="danger-outlined">
+          Date Range
+        </label>
+
+        <br />
+
+        <DateSelectorInput
+          name="startDate"
+          placeholder={!monoMode ? "Between" : ""}
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+        />
+        {!monoMode && (
+          <DateSelectorInput
+            name="endDate"
+            placeholder="and"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+        )}
+        <button type="button" className="form-control btn btn-primary" onClick={() => searchDateRange()}>
+          Search
+        </button>
+        <button
+          type="button"
+          className="form-control btn btn-primary"
+          onClick={() => resetToToday()}
+          disabled={startDate === endDate}
+        >
+          Reset to Today
+        </button>
+        <Alert className="form-control" key="main-alert" variant={mainAlert.variant}>
+          {mainAlert.body}
+        </Alert>
+      </div>
+      <div>
+        <Map center={fromLonLat(center)} zoom={zoom} sportingEvents={sportingEvents}>
+          <TileLayer source={new OSM()} zIndex={0} />
+          <FullScreenControl />
+        </Map>
+        {sportingEvents &&
+          sportingEvents.length > 0 &&
+          sportingEvents.map((sportingEvent) => {
+            // consoleDebug(sportingEvent);
+            return <PopOverlay key={sportingEvent.key} sportingEvent={sportingEvent} />;
+          })}
+        <hr />
+      </div>
+    </>
   );
 };
 

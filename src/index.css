@@ -29,3 +29,7 @@ div.marker {
   background-color: blue;
   opacity: 0.5;
 }
+
+.form-control {
+  margin: 5px;
+}
