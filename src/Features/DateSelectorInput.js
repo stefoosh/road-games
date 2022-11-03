@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 
 const DateSelectorInput = ({ name, placeholder, value, onChange }) => {
   return (
@@ -13,9 +14,17 @@ const DateSelectorInput = ({ name, placeholder, value, onChange }) => {
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        required
       />
     </>
   );
+};
+
+DateSelectorInput.propTypes = {
+  name: PropTypes.string.isRequired,
+  placeholder: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
 };
 
 export default DateSelectorInput;
