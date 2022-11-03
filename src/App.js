@@ -145,55 +145,44 @@ const App = () => {
           <option value="Los Angeles">LA</option>
           <option value="Chicago">CHI</option>
         </datalist>
-
-        <input
-          type="radio"
-          className="btn-check"
-          name="options-outlined"
-          id="radio-single-day-outlined-id"
-          autoComplete="off"
-          checked={monoMode}
-          onChange={(e) => handleDateRadioChange(e, radioOne)}
-        />
-        <label
-          className={monoMode ? "btn btn-outline-success" : "btn btn-outline-danger"}
-          htmlFor="radio-single-day-outlined-id"
-        >
-          Single Day
-        </label>
-        <input
-          type="radio"
-          className="btn-check"
-          name="options-outlined"
-          id="radio-date-range-outlined-id"
-          autoComplete="off"
-          checked={!monoMode}
-          onChange={(e) => handleDateRadioChange(e, radioTwo)}
-        />
-
-        <label
-          className={!monoMode ? "btn btn-outline-success" : "btn btn-outline-danger"}
-          htmlFor="radio-date-range-outlined-id"
-        >
-          Date Range
-        </label>
-
-        <br />
-
-        <DateSelectorInput
-          name="start-date-input"
-          placeholder={!monoMode ? "Between" : ""}
-          value={startDate}
-          onChange={handleStartDateInputChange}
-        />
-        {!monoMode && (
-          <DateSelectorInput
-            name="end-date-input"
-            placeholder="and"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
+      </div>
+      <div className="container-fluid">
+        <div className="input-group-text">
+          <input
+            type="radio"
+            className="btn-check"
+            name="options-outlined"
+            id="radio-single-day-outlined-id"
+            autoComplete="off"
+            checked={monoMode}
+            onChange={(e) => handleDateRadioChange(e, radioOne)}
           />
-        )}
+          <label
+            className={monoMode ? "btn btn-outline-success" : "btn btn-outline-danger"}
+            htmlFor="radio-single-day-outlined-id"
+          >
+            Single Day
+          </label>
+          <DateSelectorInput name="start-date-input" value={startDate} onChange={handleStartDateInputChange} />
+          <input
+            type="radio"
+            className="btn-check"
+            name="options-outlined"
+            id="radio-date-range-outlined-id"
+            autoComplete="off"
+            checked={!monoMode}
+            onChange={(e) => handleDateRadioChange(e, radioTwo)}
+          />
+          <label
+            className={!monoMode ? "btn btn-outline-success" : "btn btn-outline-danger"}
+            htmlFor="radio-date-range-outlined-id"
+          >
+            Date Range
+          </label>
+          {!monoMode && (
+            <DateSelectorInput name="end-date-input" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          )}
+        </div>
         <button type="button" className="form-control btn btn-primary" onClick={() => searchDateRange()}>
           Search
         </button>
