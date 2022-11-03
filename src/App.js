@@ -13,6 +13,7 @@ import PopOverlay from "./Features/PopOverlay";
 import DateSelectorInput from "./Features/DateSelectorInput";
 import { SportingEvent } from "./Api/propTypes";
 import RadioModeButton from "./Features/RadioModeButton";
+import { handleAsyncResponseJSON } from "./Utils/fetching";
 
 const App = () => {
   const consoleDebug = (message) => console.debug(`App: ${message}`);
@@ -83,7 +84,7 @@ const App = () => {
 
   const [mainAlert, setMainAlert] = useState(new MainAlert("primary", "Welcome to Road Games"));
 
-  const searchDateRange = () => {
+  const validateDates = () => {
     consoleDebug(`start ${startDate}`);
     consoleDebug(`end ${endDate}`);
     const prefix = `Start ${!monoMode ? "and end" : ""} date must be`;
@@ -102,8 +103,32 @@ const App = () => {
     mockFetch();
   };
 
+  class API {
+    static scheme = process.env.NODE_ENV === "production" ? "https" : "http";
+    static fqdn =
+      process.env.NODE_ENV === "production" ? "road-games-api-prod-hella-jr-39q261.mo2.mogenius.io" : "0.0.0.0:8080";
+    static url = `${API.scheme}://${API.fqdn}`;
+
+    static countriesBase = "/regional/countries";
+    static countriesUri = API.url + API.countriesBase;
+
+    // constructor() {}
+  }
+
+  const [countries, setCountries] = useState([]);
+
+  const fetchCountries = async () => {
+    consoleDebug(`Fetching ${API.countriesUri}`);
+    return await fetch(API.countriesUri).then(handleAsyncResponseJSON);
+  };
+
   useEffect(() => {
-    searchDateRange();
+    mockFetch();
+    fetchCountries()
+      .then((response) => {
+        consoleDebug(JSON.stringify(response));
+      })
+      .catch((error) => setMainAlert(new MainAlert("danger", `'${error}' ${API.countriesBase}`)));
   }, []);
 
   useEffect(() => {
@@ -173,7 +198,7 @@ const App = () => {
             labelValue="Date Range"
           />
         </div>
-        <button type="button" className="form-control btn btn-primary" onClick={() => searchDateRange()}>
+        <button type="button" className="form-control btn btn-primary" onClick={() => validateDates()}>
           Search
         </button>
         <Alert className="form-control" key="main-alert" variant={mainAlert.variant}>
