@@ -20,17 +20,29 @@ const App = () => {
   const radioOne = "radioOne";
   const radioTwo = "radioTwo";
 
-  const convertRawDateToDMY = (rawDateObject) => {
-    return rawDateObject.toISOString().split("T")[0];
-  };
+  const currentYearMonthDay = new Date().toISOString().split("T")[0];
+  const [startDate, setStartDate] = useState(currentYearMonthDay);
+  const [endDate, setEndDate] = useState(currentYearMonthDay);
 
   const handleDateRadioChange = (event, source) => {
     setMonoMode(source === radioOne);
+
+    if (source === radioOne) {
+      setStartDate(currentYearMonthDay);
+      setEndDate(currentYearMonthDay);
+    }
     if (source === radioTwo) {
       const result = new Date(startDate);
       result.setDate(result.getDate() + 1);
-      setEndDate(convertRawDateToDMY(result));
+      setEndDate(result.toISOString().split("T")[0]);
     }
+  };
+
+  const handleStartDateInputChange = (event) => {
+    if (monoMode) {
+      setEndDate(event.target.value);
+    }
+    setStartDate(event.target.value);
   };
 
   class MainAlert {
@@ -40,16 +52,6 @@ const App = () => {
     }
   }
   const [mainAlert, setMainAlert] = useState(new MainAlert("primary", "Welcome to Road Games"));
-
-  const currentYearMonthDay = convertRawDateToDMY(new Date());
-  const [startDate, setStartDate] = useState(currentYearMonthDay);
-  const [endDate, setEndDate] = useState(currentYearMonthDay);
-
-  const resetToToday = () => {
-    setStartDate(currentYearMonthDay);
-    setEndDate(currentYearMonthDay);
-    setMonoMode(true);
-  };
 
   const [sportingEvents, setSportingEvents] = useState([]);
 
@@ -67,6 +69,10 @@ const App = () => {
     }
   };
 
+  const dateIsInThePast = (date) => {
+    return new Date(date).getTime() < new Date(currentYearMonthDay).getTime();
+  };
+
   const searchDateRange = () => {
     consoleDebug(`start ${startDate}`);
     consoleDebug(`end ${endDate}`);
@@ -76,6 +82,10 @@ const App = () => {
     }
     if (new Date(startDate).getTime() > new Date(endDate).getTime()) {
       setMainAlert(new MainAlert("warning", "Start date must be before end date"));
+      return;
+    }
+    if (dateIsInThePast(startDate) || dateIsInThePast(endDate)) {
+      setMainAlert(new MainAlert("warning", "Start data and end date must be today or in the future"));
       return;
     }
     mockFetch();
@@ -139,38 +149,45 @@ const App = () => {
           type="radio"
           className="btn-check"
           name="options-outlined"
-          id="success-outlined"
+          id="radio-single-day-outlined-id"
           autoComplete="off"
           checked={monoMode}
           onChange={(e) => handleDateRadioChange(e, radioOne)}
         />
-        <label className="btn btn-outline-success" htmlFor="success-outlined">
+        <label
+          className={monoMode ? "btn btn-outline-success" : "btn btn-outline-danger"}
+          htmlFor="radio-single-day-outlined-id"
+        >
           Single Day
         </label>
         <input
           type="radio"
           className="btn-check"
           name="options-outlined"
-          id="danger-outlined"
+          id="radio-date-range-outlined-id"
           autoComplete="off"
           checked={!monoMode}
           onChange={(e) => handleDateRadioChange(e, radioTwo)}
         />
-        <label className="btn btn-outline-danger" htmlFor="danger-outlined">
+
+        <label
+          className={!monoMode ? "btn btn-outline-success" : "btn btn-outline-danger"}
+          htmlFor="radio-date-range-outlined-id"
+        >
           Date Range
         </label>
 
         <br />
 
         <DateSelectorInput
-          name="startDate"
+          name="start-date-input"
           placeholder={!monoMode ? "Between" : ""}
           value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
+          onChange={handleStartDateInputChange}
         />
         {!monoMode && (
           <DateSelectorInput
-            name="endDate"
+            name="end-date-input"
             placeholder="and"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
@@ -178,14 +195,6 @@ const App = () => {
         )}
         <button type="button" className="form-control btn btn-primary" onClick={() => searchDateRange()}>
           Search
-        </button>
-        <button
-          type="button"
-          className="form-control btn btn-primary"
-          onClick={() => resetToToday()}
-          disabled={startDate === endDate}
-        >
-          Reset to Today
         </button>
         <Alert className="form-control" key="main-alert" variant={mainAlert.variant}>
           {mainAlert.body}
