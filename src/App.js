@@ -76,16 +76,17 @@ const App = () => {
   const searchDateRange = () => {
     consoleDebug(`start ${startDate}`);
     consoleDebug(`end ${endDate}`);
+    const prefix = `Start ${!monoMode ? "and end" : ""} date must be`;
     if (startDate === "" || endDate === "" || startDate === undefined || endDate === undefined) {
-      setMainAlert(new MainAlert("warning", "Both start date and end date must be defined"));
+      setMainAlert(new MainAlert("warning", `${prefix} defined`));
+      return;
+    }
+    if (dateIsInThePast(startDate) || dateIsInThePast(endDate)) {
+      setMainAlert(new MainAlert("warning", `${prefix} today or in the future`));
       return;
     }
     if (new Date(startDate).getTime() > new Date(endDate).getTime()) {
       setMainAlert(new MainAlert("warning", "Start date must be before end date"));
-      return;
-    }
-    if (dateIsInThePast(startDate) || dateIsInThePast(endDate)) {
-      setMainAlert(new MainAlert("warning", "Start data and end date must be today or in the future"));
       return;
     }
     mockFetch();
