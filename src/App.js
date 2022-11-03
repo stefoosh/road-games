@@ -25,6 +25,13 @@ const App = () => {
   const radioSingleDateId = "radio-single-day-id";
   const radioDateRangeId = "radio-date-range-id";
 
+  const handleStartDateInputChange = (event) => {
+    if (monoMode) {
+      setEndDate(event.target.value);
+    }
+    setStartDate(event.target.value);
+  };
+
   const handleDateRadioChange = (event) => {
     const { name, value } = event.target;
     // console.debug(`${name}=${value}`);
@@ -42,21 +49,6 @@ const App = () => {
       setEndDate(result.toISOString().split("T")[0]);
     }
   };
-
-  const handleStartDateInputChange = (event) => {
-    if (monoMode) {
-      setEndDate(event.target.value);
-    }
-    setStartDate(event.target.value);
-  };
-
-  class MainAlert {
-    constructor(variant, body) {
-      this.variant = variant;
-      this.body = body;
-    }
-  }
-  const [mainAlert, setMainAlert] = useState(new MainAlert("primary", "Welcome to Road Games"));
 
   const [sportingEvents, setSportingEvents] = useState([]);
 
@@ -77,6 +69,19 @@ const App = () => {
   const dateIsInThePast = (date) => {
     return new Date(date).getTime() < new Date(currentYearMonthDay).getTime();
   };
+
+  const convertMDYtoHumanFormat = (mdy) => {
+    return new Date(mdy).toDateString();
+  };
+
+  class MainAlert {
+    constructor(variant, body) {
+      this.variant = variant;
+      this.body = body;
+    }
+  }
+
+  const [mainAlert, setMainAlert] = useState(new MainAlert("primary", "Welcome to Road Games"));
 
   const searchDateRange = () => {
     consoleDebug(`start ${startDate}`);
@@ -100,10 +105,6 @@ const App = () => {
   useEffect(() => {
     searchDateRange();
   }, []);
-
-  const convertMDYtoHumanFormat = (mdy) => {
-    return new Date(mdy).toDateString();
-  };
 
   useEffect(() => {
     const eventPluralization = sportingEvents.length === 1 ? "event" : "events";
