@@ -16,6 +16,10 @@ import RadioModeButton from "./Features/RadioModeButton";
 import { handleAsyncResponseJSON } from "./Utils/fetching";
 
 const App = () => {
+  const munich = [11.582, 48.1351];
+  const [mapCenter, setMapCenter] = useState(munich);
+  const [mapZoom, setMapZoom] = useState(4.5);
+
   const [monoMode, setMonoMode] = useState(true);
 
   const currentYearMonthDay = new Date().toISOString().split("T")[0];
@@ -134,12 +138,26 @@ const App = () => {
       );
   }, []);
 
+  const regionSpecificZoom = (userCountry) => {
+    if (userCountry.region === "Europe") {
+      setMapZoom(7);
+    } else if (userCountry.subregion === "North America") {
+      setMapZoom(5);
+    } else if (userCountry.subregion === "South America") {
+      setMapZoom(5);
+    }
+  };
+
   const handleCountryBlur = (event) => {
     const userCountryInput = event.target.value;
     console.debug(`userCountryInput=${userCountryInput}`);
-    const found = countries.find((country) => country.name === userCountryInput);
-    if (found) {
-      setMainAlert(new MainAlert("info", `${found.emoji} ${found.name}`));
+    const userCountry = countries.find((country) => country.name === userCountryInput);
+    if (userCountry) {
+      const newMapCenter = [userCountry.longitude, userCountry.latitude];
+      console.debug(`newMapCenter=${newMapCenter}`);
+      setMapCenter(newMapCenter);
+      regionSpecificZoom(userCountry);
+      setMainAlert(new MainAlert("info", `${userCountry.emoji} ${userCountry.name}`));
     } else {
       setMainAlert(new MainAlert("warning", `Choose a country. Invalid input='${userCountryInput}'`));
     }
@@ -166,10 +184,6 @@ const App = () => {
     }
   }, [sportingEvents]);
 
-  const munster = [7.62571, 51.96236];
-  const [center, setCenter] = useState(munster);
-  const [zoom, setZoom] = useState(5);
-
   return (
     <>
       <div className="container-fluid">
@@ -187,7 +201,7 @@ const App = () => {
           <datalist id="datalistOptions">
             {countries &&
               countries.map((country) => (
-                <option value={country.name}>
+                <option key={country.id} value={country.name}>
                   {country.emoji} {country.iso2}
                 </option>
               ))}
@@ -221,7 +235,7 @@ const App = () => {
         </Alert>
       </div>
       <div>
-        <Map center={fromLonLat(center)} zoom={zoom} sportingEvents={sportingEvents}>
+        <Map center={fromLonLat(mapCenter)} zoom={mapZoom} sportingEvents={sportingEvents}>
           <TileLayer source={new OSM()} zIndex={0} />
           <FullScreenControl />
         </Map>
