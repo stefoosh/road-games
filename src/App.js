@@ -21,6 +21,15 @@ const App = () => {
   const [mapCenter, setMapCenter] = useState(munich);
   const [mapZoom, setMapZoom] = useState(4.5);
 
+  const setMapCenterLog = (longitude, latitude) => {
+    if (longitude === "" || longitude === undefined) console.error(`longitude=${longitude}`);
+    if (latitude === "" || latitude === undefined) console.error(`latitude=${latitude}`);
+
+    const coordinates = [longitude, latitude];
+    console.debug(`centering=${coordinates}`);
+    setMapCenter(coordinates);
+  };
+
   const [monoMode, setMonoMode] = useState(true);
 
   const currentYearMonthDay = new Date().toISOString().split("T")[0];
@@ -151,16 +160,15 @@ const App = () => {
     const userCountry = countries.find((country) => country.name === userCountryInput);
 
     if (userCountry) {
-      const newMapCenter = [userCountry.longitude, userCountry.latitude];
-      console.debug(`newMapCenter=${newMapCenter}`);
-      setMapCenter(newMapCenter);
+      setMapCenterLog(userCountry.longitude, userCountry.latitude);
       regionSpecificZoom(userCountry);
+
       setMainAlert(new MainAlert("info", `${userCountry.emoji} ${userCountry.name}`));
 
       fetchUri(API.statesUri(userCountry.name))
         .then((states) => {
           setStates(states);
-          setStatesPlaceholder("Select a state/province/region...");
+          setStatesPlaceholder(states.length === 0 ? "No states found" : "Select a state/province/region...");
         })
         .catch((error) =>
           setMainAlert(
@@ -176,8 +184,14 @@ const App = () => {
   };
 
   const handleStatesBlur = (event) => {
-    const { name, value } = event.target;
-    console.debug(`${name}=${value}`);
+    const activeStateName = event.target.value;
+
+    const activeCountryName = document.getElementById("datalist-country-id").value;
+    const countryObject = countries.find((country) => country.name === activeCountryName);
+    setMainAlert(new MainAlert("info", `${countryObject.emoji} ${countryObject.name} - ${activeStateName}`));
+
+    const stateObject = states.find((state) => state.name === activeStateName);
+    setMapCenterLog(stateObject.longitude, stateObject.latitude);
   };
 
   useEffect(() => {
@@ -225,7 +239,7 @@ const App = () => {
             dataListId="datalist-states-options"
             placeholder={statesPlaceholder}
             onBlur={handleStatesBlur}
-            disabled={states === undefined}
+            disabled={states === undefined || (states && states.length === 0)}
             options={states ? states.map((state) => <option key={state.id} value={state.name} />) : ""}
           />
         </div>
