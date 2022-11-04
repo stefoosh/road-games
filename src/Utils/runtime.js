@@ -1,5 +1,11 @@
 import { currentYearMonthDay, initialMapZoom } from "./constants";
 
+export const addOneDay = (givenDay) => {
+  const result = new Date(givenDay);
+  result.setDate(result.getDate() + 1);
+  return result.toISOString().split("T")[0];
+};
+
 export const dateIsInThePast = (date) => {
   return new Date(date).getTime() < new Date(currentYearMonthDay).getTime();
 };

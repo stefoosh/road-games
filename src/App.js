@@ -26,6 +26,7 @@ import {
 import Map from "./Map/Map";
 import { fetchUri } from "./Utils/fetching";
 import {
+  addOneDay,
   convertMDYtoHumanFormat,
   dateIsInThePast,
   MainAlert,
@@ -43,7 +44,6 @@ const App = () => {
   };
 
   const [monoSearchMode, setMonoSearchMode] = useState(true);
-
   const [startDate, setStartDate] = useState(currentYearMonthDay);
   const [endDate, setEndDate] = useState(currentYearMonthDay);
 
@@ -64,9 +64,7 @@ const App = () => {
       setEndDate(currentYearMonthDay);
     }
     if (name === radioDateRangeId) {
-      const result = new Date(startDate);
-      result.setDate(result.getDate() + 1);
-      setEndDate(result.toISOString().split("T")[0]);
+      setEndDate(addOneDay(startDate));
     }
   };
 
@@ -116,7 +114,6 @@ const App = () => {
 
     if (userCountry) {
       refreshMap(userCountry.longitude, userCountry.latitude, userCountry);
-
       setMainAlert(new MainAlert("info", `${userCountry.emoji} ${userCountry.name}`));
 
       fetchUri(API.statesUri(userCountry.name))
