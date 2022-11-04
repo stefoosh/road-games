@@ -22,6 +22,7 @@ import {
   radioSingleDateId,
   selectACountry,
   selectAState,
+  welcomeMessage,
 } from "./Utils/constants";
 import Map from "./Map/Map";
 import { fetchUri } from "./Utils/fetching";
@@ -69,7 +70,7 @@ const App = () => {
   };
 
   const [sportingEvents, setSportingEvents] = useState([]);
-  const [mainAlert, setMainAlert] = useState(new MainAlert("primary", "Welcome to Road Games"));
+  const [mainAlert, setMainAlert] = useState(new MainAlert("primary", welcomeMessage));
 
   const validateDates = () => {
     console.debug(`start ${startDate}`);
@@ -88,6 +89,7 @@ const App = () => {
       setMainAlert(new MainAlert("warning", "Start date must be before end date"));
       return;
     }
+    mockFetch();
   };
 
   const [countries, setCountries] = useState(undefined);
@@ -183,6 +185,8 @@ const App = () => {
 
     if (sportingEvents.length > 0) {
       setMainAlert(new MainAlert("success", `Found ${sportingEvents.length} ${betweenDatesMessage}`));
+    } else if (sportingEvents.length === 0) {
+      console.info(welcomeMessage);
     } else {
       setMainAlert(new MainAlert("dark", `Found no ${betweenDatesMessage}`));
     }
@@ -191,6 +195,27 @@ const App = () => {
   return (
     <>
       <div className="container-fluid">
+        <div className="container-fluid input-group-text m-1">
+          <RadioModeButton
+            id={radioSingleDateId}
+            checked={monoSearchMode}
+            onchange={handleDateRadioChange}
+            labelClassName={monoSearchMode ? "btn btn-outline-success" : "btn btn-outline-danger"}
+            labelValue="Single Day"
+          />
+          <RadioModeButton
+            id={radioDateRangeId}
+            checked={!monoSearchMode}
+            onchange={handleDateRadioChange}
+            labelClassName={!monoSearchMode ? "btn btn-outline-success" : "btn btn-outline-danger"}
+            labelValue="Date Range"
+          />
+          <DateSelectorInput name="start-date-input" value={startDate} onChange={handleStartDateInputChange} />
+          {!monoSearchMode && (
+            <DateSelectorInput name="end-date-input" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          )}
+        </div>
+
         <div className="container-fluid input-group-text m-1">
           <SearchableDataList
             inputId="datalist-country-id"
@@ -216,26 +241,7 @@ const App = () => {
             options={states ? states.map((state) => <option key={state.id} value={state.name} />) : ""}
           />
         </div>
-        <div className="container-fluid input-group-text m-1">
-          <RadioModeButton
-            id={radioSingleDateId}
-            checked={monoSearchMode}
-            onchange={handleDateRadioChange}
-            labelClassName={monoSearchMode ? "btn btn-outline-success" : "btn btn-outline-danger"}
-            labelValue="Single Day"
-          />
-          <DateSelectorInput name="start-date-input" value={startDate} onChange={handleStartDateInputChange} />
-          {!monoSearchMode && (
-            <DateSelectorInput name="end-date-input" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-          )}
-          <RadioModeButton
-            id={radioDateRangeId}
-            checked={!monoSearchMode}
-            onchange={handleDateRadioChange}
-            labelClassName={!monoSearchMode ? "btn btn-outline-success" : "btn btn-outline-danger"}
-            labelValue="Date Range"
-          />
-        </div>
+
         <button type="button" className="form-control btn btn-primary" onClick={() => validateDates()}>
           Search
         </button>
@@ -255,6 +261,7 @@ const App = () => {
             return <PopOverlay key={sportingEvent.key} sportingEvent={sportingEvent} />;
           })}
         <hr />
+        {JSON.stringify(sportingEvents, null, 2)}
       </div>
     </>
   );

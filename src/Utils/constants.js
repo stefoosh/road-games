@@ -5,3 +5,4 @@ export const radioSingleDateId = "radio-single-day-id";
 export const radioDateRangeId = "radio-date-range-id";
 export const selectACountry = "Select a country...";
 export const selectAState = "Select a state/province/region...";
+export const welcomeMessage = "Welcome to Road Games";
