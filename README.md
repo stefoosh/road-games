@@ -1,15 +1,9 @@
 # road-games
 
+https://roadgames.stefoo.sh
+
 Find sporting events in a geographic radius by date range
 
 ---
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Countries States Cities
-
-https://countrystatecity.in/
-
-https://github.com/dr5hn/countries-states-cities-database
-
-Fronted by https://statically.io/
-
+Stored objects are synchronized into a [Mogenius MongoDB](https://docs.mogenius.com/tutorials/how-to-set-up-mongodb-in-the-cloud) instance via https://github.com/stefoosh/sportsdata-synchronizer
