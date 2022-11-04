@@ -25,23 +25,25 @@ import {
 } from "./Utils/constants";
 import Map from "./Map/Map";
 import { fetchUri } from "./Utils/fetching";
-import { convertMDYtoHumanFormat, dateIsInThePast, MainAlert, regionSpecificZoom } from "./Utils/runtime";
+import {
+  addOneDay,
+  convertMDYtoHumanFormat,
+  dateIsInThePast,
+  MainAlert,
+  regionSpecificZoom,
+  setMapCenterLog,
+} from "./Utils/runtime";
 
 const App = () => {
   const [mapCenter, setMapCenter] = useState(munichCoordinates);
   const [mapZoom, setMapZoom] = useState(initialMapZoom);
 
-  const setMapCenterLog = (longitude, latitude) => {
-    if (longitude === "" || longitude === undefined) console.error(`longitude=${longitude}`);
-    if (latitude === "" || latitude === undefined) console.error(`latitude=${latitude}`);
-
-    const coordinates = [longitude, latitude];
-    console.debug(`centering=${coordinates}`);
-    setMapCenter(coordinates);
+  const refreshMap = (latitude, longitude, countryObject) => {
+    regionSpecificZoom(countryObject, setMapZoom);
+    setMapCenterLog(latitude, longitude, setMapCenter);
   };
 
   const [monoSearchMode, setMonoSearchMode] = useState(true);
-
   const [startDate, setStartDate] = useState(currentYearMonthDay);
   const [endDate, setEndDate] = useState(currentYearMonthDay);
 
@@ -62,9 +64,7 @@ const App = () => {
       setEndDate(currentYearMonthDay);
     }
     if (name === radioDateRangeId) {
-      const result = new Date(startDate);
-      result.setDate(result.getDate() + 1);
-      setEndDate(result.toISOString().split("T")[0]);
+      setEndDate(addOneDay(startDate));
     }
   };
 
@@ -113,9 +113,7 @@ const App = () => {
     const userCountry = countries.find((country) => country.name === userCountryInput);
 
     if (userCountry) {
-      setMapCenterLog(userCountry.longitude, userCountry.latitude);
-      regionSpecificZoom(userCountry, setMapZoom);
-
+      refreshMap(userCountry.longitude, userCountry.latitude, userCountry);
       setMainAlert(new MainAlert("info", `${userCountry.emoji} ${userCountry.name}`));
 
       fetchUri(API.statesUri(userCountry.name))
@@ -149,7 +147,7 @@ const App = () => {
 
     const stateObject = states.find((state) => state.name === userStateInput);
     if (stateObject) {
-      setMapCenterLog(stateObject.longitude, stateObject.latitude);
+      refreshMap(stateObject.longitude, stateObject.latitude, countryObject);
       setMainAlert(new MainAlert("info", `${prefix} - ${userStateInput}`));
     } else {
       const message = userStateInput === "" ? selectAState : `invalid state input'${userStateInput}'`;
