@@ -14,6 +14,7 @@ import DateSelectorInput from "./Features/DateSelectorInput";
 import { SportingEvent } from "./Api/propTypes";
 import RadioModeButton from "./Features/RadioModeButton";
 import { handleAsyncResponseJSON } from "./Utils/fetching";
+import SearchableDataList from "./Features/SearchableDataList";
 
 const App = () => {
   const munich = [11.582, 48.1351];
@@ -119,6 +120,8 @@ const App = () => {
 
   const [countries, setCountries] = useState(undefined);
   const [countriesPlaceholder, setCountriesPlaceholder] = useState("Fetching countries...");
+  const [states, setStates] = useState(undefined);
+  const [statesPlaceholder, setStatesPlaceholder] = useState("States or Provinces");
 
   const fetchCountries = async () => {
     return await fetch(API.countriesUri).then(handleAsyncResponseJSON);
@@ -159,9 +162,12 @@ const App = () => {
       regionSpecificZoom(userCountry);
       setMainAlert(new MainAlert("info", `${userCountry.emoji} ${userCountry.name}`));
     } else {
+      setStates(undefined);
       setMainAlert(new MainAlert("warning", `Choose a country. Invalid input='${userCountryInput}'`));
     }
   };
+
+  const handleStatesBlur = () => {};
 
   useEffect(() => {
     const eventPluralization = sportingEvents.length === 1 ? "event" : "events";
@@ -188,24 +194,29 @@ const App = () => {
     <>
       <div className="container-fluid">
         <div className="container-fluid input-group-text m-1">
-          <label htmlFor="exampleDataList" className="form-label">
-            Starting Point
-          </label>
-          <input
-            className="form-control"
-            list="datalistOptions"
-            id="exampleDataList"
+          <SearchableDataList
+            inputId="datalist-country-id"
+            dataListId="datalist-country-options"
             placeholder={countriesPlaceholder}
+            disabled={false}
             onBlur={handleCountryBlur}
-          />
-          <datalist id="datalistOptions">
-            {countries &&
+            options={
+              countries &&
               countries.map((country) => (
                 <option key={country.id} value={country.name}>
                   {country.emoji} {country.iso2}
                 </option>
-              ))}
-          </datalist>
+              ))
+            }
+          />
+          <SearchableDataList
+            inputId="datalist-states-id"
+            dataListId="datalist-states-options"
+            placeholder={statesPlaceholder}
+            onBlur={handleStatesBlur}
+            disabled={states === undefined}
+            // options={}
+          />
         </div>
         <div className="container-fluid input-group-text m-1">
           <RadioModeButton
