@@ -10,8 +10,6 @@ import MapContext from "./MapContext";
 import { SportingEvent } from "../Api/propTypes";
 
 const Map = ({ children, zoom, center, sportingEvents }) => {
-  const consoleDebug = (message) => console.debug(`Map: ${message}`);
-
   const mapRef = useRef();
   const [map, setMap] = useState(null);
 
@@ -74,18 +72,18 @@ const Map = ({ children, zoom, center, sportingEvents }) => {
       const newHash = overlayHash(newOverlays);
 
       if (oldHash === 0) {
-        consoleDebug("First render");
+        console.debug("First render");
       } else if (oldHash === newHash) {
-        consoleDebug("These overlays are the same");
+        console.debug("These overlays are the same");
       } else {
-        consoleDebug("Change of overlays");
+        console.debug("Change of overlays");
         map.getOverlays().clear();
       }
       newOverlays.forEach((newOverlay) => {
         map.addOverlay(newOverlay);
       });
     } else {
-      consoleDebug("Rendering");
+      console.debug("Rendering");
     }
   }, [map, sportingEvents]);
 

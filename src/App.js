@@ -16,8 +16,6 @@ import RadioModeButton from "./Features/RadioModeButton";
 import { handleAsyncResponseJSON } from "./Utils/fetching";
 
 const App = () => {
-  const consoleDebug = (message) => console.debug(`App: ${message}`);
-
   const [monoMode, setMonoMode] = useState(true);
 
   const currentYearMonthDay = new Date().toISOString().split("T")[0];
@@ -85,8 +83,8 @@ const App = () => {
   const [mainAlert, setMainAlert] = useState(new MainAlert("primary", "Welcome to Road Games"));
 
   const validateDates = () => {
-    consoleDebug(`start ${startDate}`);
-    consoleDebug(`end ${endDate}`);
+    console.debug(`start ${startDate}`);
+    console.debug(`end ${endDate}`);
     const prefix = `Start ${!monoMode ? "and end" : ""} date must be`;
     if (startDate === "" || endDate === "" || startDate === undefined || endDate === undefined) {
       setMainAlert(new MainAlert("warning", `${prefix} defined`));
@@ -115,21 +113,37 @@ const App = () => {
     // constructor() {}
   }
 
-  const [countries, setCountries] = useState([]);
+  const [countries, setCountries] = useState(undefined);
+  const [countriesPlaceholder, setCountriesPlaceholder] = useState("Fetching countries...");
 
   const fetchCountries = async () => {
-    consoleDebug(`Fetching ${API.countriesUri}`);
     return await fetch(API.countriesUri).then(handleAsyncResponseJSON);
   };
 
   useEffect(() => {
-    mockFetch();
+    // mockFetch();
+    console.debug(`${API.countriesUri} fetching`);
     fetchCountries()
       .then((response) => {
-        consoleDebug(JSON.stringify(response));
+        setCountries(response);
+        setCountriesPlaceholder("Select a country...");
+        console.debug(JSON.stringify(response));
       })
-      .catch((error) => setMainAlert(new MainAlert("danger", `'${error}' ${API.countriesBase}`)));
+      .catch((error) =>
+        setMainAlert(new MainAlert("danger", `Error='${error}' ${API.countriesBase}, see browser console.`))
+      );
   }, []);
+
+  const handleCountryBlur = (event) => {
+    const userCountryInput = event.target.value;
+    console.debug(`userCountryInput=${userCountryInput}`);
+    const found = countries.find((country) => country.name === userCountryInput);
+    if (found) {
+      setMainAlert(new MainAlert("info", `${found.emoji} ${found.name}`));
+    } else {
+      setMainAlert(new MainAlert("warning", `Choose a country. Invalid input='${userCountryInput}'`));
+    }
+  };
 
   useEffect(() => {
     const eventPluralization = sportingEvents.length === 1 ? "event" : "events";
@@ -148,7 +162,7 @@ const App = () => {
     if (sportingEvents.length > 0) {
       setMainAlert(new MainAlert("success", `Found ${sportingEvents.length} ${betweenDatesMessage}`));
     } else {
-      setMainAlert(new MainAlert("secondary", `Found no ${betweenDatesMessage}`));
+      setMainAlert(new MainAlert("dark", `Found no ${betweenDatesMessage}`));
     }
   }, [sportingEvents]);
 
@@ -167,15 +181,16 @@ const App = () => {
             className="form-control"
             list="datalistOptions"
             id="exampleDataList"
-            placeholder="Select a country..."
-            onBlur={(e) => console.debug(e.target.value)}
+            placeholder={countriesPlaceholder}
+            onBlur={handleCountryBlur}
           />
           <datalist id="datalistOptions">
-            <option value="San Francisco">🌉SF</option>
-            <option value="New York">NY</option>
-            <option value="Seattle">SEA</option>
-            <option value="Los Angeles">LA</option>
-            <option value="Chicago">CHI</option>
+            {countries &&
+              countries.map((country) => (
+                <option value={country.name}>
+                  {country.emoji} {country.iso2}
+                </option>
+              ))}
           </datalist>
         </div>
         <div className="container-fluid input-group-text m-1">
@@ -213,7 +228,7 @@ const App = () => {
         {sportingEvents &&
           sportingEvents.length > 0 &&
           sportingEvents.map((sportingEvent) => {
-            // consoleDebug(sportingEvent);
+            // console.debug(sportingEvent);
             return <PopOverlay key={sportingEvent.key} sportingEvent={sportingEvent} />;
           })}
         <hr />
