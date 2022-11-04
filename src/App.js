@@ -6,20 +6,30 @@ import "ol/ol.css";
 
 import Alert from "react-bootstrap/Alert";
 
-import Map from "./Map/Map";
-import TileLayer from "./Features/TileLayer";
+import { API } from "./Api/config";
+import { SportingEvent } from "./Api/propTypes";
+import DateSelectorInput from "./Features/DateSelectorInput";
 import FullScreenControl from "./Features/FullScreenControl";
 import PopOverlay from "./Features/PopOverlay";
-import DateSelectorInput from "./Features/DateSelectorInput";
-import { SportingEvent } from "./Api/propTypes";
 import RadioModeButton from "./Features/RadioModeButton";
-import { fetchUri } from "./Utils/fetching";
 import SearchableDataList from "./Features/SearchableDataList";
+import TileLayer from "./Features/TileLayer";
+import {
+  currentYearMonthDay,
+  initialMapZoom,
+  munichCoordinates,
+  radioDateRangeId,
+  radioSingleDateId,
+  selectACountry,
+  selectAState,
+} from "./Utils/constants";
+import Map from "./Map/Map";
+import { fetchUri } from "./Utils/fetching";
+import { convertMDYtoHumanFormat, dateIsInThePast, MainAlert, regionSpecificZoom } from "./Utils/runtime";
 
 const App = () => {
-  const munich = [11.582, 48.1351];
-  const [mapCenter, setMapCenter] = useState(munich);
-  const [mapZoom, setMapZoom] = useState(4.5);
+  const [mapCenter, setMapCenter] = useState(munichCoordinates);
+  const [mapZoom, setMapZoom] = useState(initialMapZoom);
 
   const setMapCenterLog = (longitude, latitude) => {
     if (longitude === "" || longitude === undefined) console.error(`longitude=${longitude}`);
@@ -30,16 +40,13 @@ const App = () => {
     setMapCenter(coordinates);
   };
 
-  const [monoMode, setMonoMode] = useState(true);
+  const [monoSearchMode, setMonoSearchMode] = useState(true);
 
-  const currentYearMonthDay = new Date().toISOString().split("T")[0];
   const [startDate, setStartDate] = useState(currentYearMonthDay);
   const [endDate, setEndDate] = useState(currentYearMonthDay);
-  const radioSingleDateId = "radio-single-day-id";
-  const radioDateRangeId = "radio-date-range-id";
 
   const handleStartDateInputChange = (event) => {
-    if (monoMode) {
+    if (monoSearchMode) {
       setEndDate(event.target.value);
     }
     setStartDate(event.target.value);
@@ -47,10 +54,8 @@ const App = () => {
 
   const handleDateRadioChange = (event) => {
     const { name, value } = event.target;
-    // console.debug(`${name}=${value}`);
-    // console.debug(`Setting monoMode=${monoMode}`);
 
-    setMonoMode(name === radioSingleDateId);
+    setMonoSearchMode(name === radioSingleDateId);
 
     if (name === radioSingleDateId) {
       setStartDate(currentYearMonthDay);
@@ -64,28 +69,13 @@ const App = () => {
   };
 
   const [sportingEvents, setSportingEvents] = useState([]);
-
-  const dateIsInThePast = (date) => {
-    return new Date(date).getTime() < new Date(currentYearMonthDay).getTime();
-  };
-
-  const convertMDYtoHumanFormat = (mdy) => {
-    return new Date(mdy).toDateString();
-  };
-
-  class MainAlert {
-    constructor(variant, body) {
-      this.variant = variant;
-      this.body = body;
-    }
-  }
-
   const [mainAlert, setMainAlert] = useState(new MainAlert("primary", "Welcome to Road Games"));
 
   const validateDates = () => {
     console.debug(`start ${startDate}`);
     console.debug(`end ${endDate}`);
-    const prefix = `Start ${!monoMode ? "and end" : ""} date must be`;
+
+    const prefix = `Start ${!monoSearchMode ? "and end" : ""} date must be`;
     if (startDate === "" || endDate === "" || startDate === undefined || endDate === undefined) {
       setMainAlert(new MainAlert("warning", `${prefix} defined`));
       return;
@@ -100,33 +90,8 @@ const App = () => {
     }
   };
 
-  class API {
-    static scheme = process.env.NODE_ENV === "production" ? "https" : "http";
-    static fqdn =
-      process.env.NODE_ENV === "production" ? "road-games-api-prod-hella-jr-39q261.mo2.mogenius.io" : "0.0.0.0:8080";
-    static url = `${API.scheme}://${API.fqdn}`;
-
-    static countriesBase = "/regional/countries";
-    static countriesUri = API.url + API.countriesBase;
-
-    static statesBase = (countryName) => {
-      return `/regional/states?country_name=${countryName}`;
-    };
-    static statesUri = (countryName) => {
-      return API.url + API.statesBase(countryName);
-    };
-
-    constructor() {
-      // const windowLocationHostname = window.location.hostname;
-    }
-  }
-
   const [countries, setCountries] = useState(undefined);
   const [countriesPlaceholder, setCountriesPlaceholder] = useState("Fetching countries...");
-  const [states, setStates] = useState(undefined);
-  const [statesPlaceholder, setStatesPlaceholder] = useState("States or Provinces");
-
-  const selectACountry = "Select a country...";
 
   useEffect(() => {
     fetchUri(API.countriesUri)
@@ -139,18 +104,6 @@ const App = () => {
       );
   }, []);
 
-  const regionSpecificZoom = (userCountry) => {
-    if (userCountry.region === "Europe") {
-      setMapZoom(7);
-    } else if (userCountry.subregion === "North America") {
-      setMapZoom(5);
-    } else if (userCountry.subregion === "South America") {
-      setMapZoom(5);
-    } else if (userCountry.name === "Australia") {
-      setMapZoom(5);
-    }
-  };
-
   const handleCountryBlur = (event) => {
     setStates(undefined);
     document.getElementById("datalist-states-id").value = "";
@@ -161,14 +114,14 @@ const App = () => {
 
     if (userCountry) {
       setMapCenterLog(userCountry.longitude, userCountry.latitude);
-      regionSpecificZoom(userCountry);
+      regionSpecificZoom(userCountry, setMapZoom);
 
       setMainAlert(new MainAlert("info", `${userCountry.emoji} ${userCountry.name}`));
 
       fetchUri(API.statesUri(userCountry.name))
         .then((states) => {
           setStates(states);
-          setStatesPlaceholder(states.length === 0 ? "No states found" : "Select a state/province/region...");
+          setStatesPlaceholder(states.length === 0 ? "No states found" : selectAState);
         })
         .catch((error) =>
           setMainAlert(
@@ -183,15 +136,39 @@ const App = () => {
     }
   };
 
+  const [states, setStates] = useState(undefined);
+  const [statesPlaceholder, setStatesPlaceholder] = useState("States or Provinces");
+
   const handleStatesBlur = (event) => {
-    const activeStateName = event.target.value;
+    const userStateInput = event.target.value;
+    console.debug(`userStateInput=${userStateInput}`);
 
     const activeCountryName = document.getElementById("datalist-country-id").value;
     const countryObject = countries.find((country) => country.name === activeCountryName);
-    setMainAlert(new MainAlert("info", `${countryObject.emoji} ${countryObject.name} - ${activeStateName}`));
+    const prefix = `${countryObject.emoji} ${countryObject.name}`;
 
-    const stateObject = states.find((state) => state.name === activeStateName);
-    setMapCenterLog(stateObject.longitude, stateObject.latitude);
+    const stateObject = states.find((state) => state.name === userStateInput);
+    if (stateObject) {
+      setMapCenterLog(stateObject.longitude, stateObject.latitude);
+      setMainAlert(new MainAlert("info", `${prefix} - ${userStateInput}`));
+    } else {
+      const message = userStateInput === "" ? selectAState : `invalid state input'${userStateInput}'`;
+      setMainAlert(new MainAlert("warning", `${prefix} - ${message}`));
+    }
+  };
+
+  const mockFetch = () => {
+    if (startDate === currentYearMonthDay && endDate === currentYearMonthDay) {
+      setSportingEvents([new SportingEvent(1, [0.1276, 51.5072], "LondonPremiere", "Spurs")]);
+    } else if (startDate === currentYearMonthDay && endDate === "2022-11-08") {
+      const mockApi = [
+        new SportingEvent(696969, [16.3725, 48.208889], "Vienna Action", "I am content"),
+        new SportingEvent(123, [8.80777, 53.07516], "Bremen Fußball", "Herkunft"),
+      ];
+      setSportingEvents(mockApi);
+    } else {
+      setSportingEvents([]);
+    }
   };
 
   useEffect(() => {
@@ -201,11 +178,9 @@ const App = () => {
 
     let betweenDatesMessage = `sporting ${eventPluralization} between ${start} and ${end}`;
     if (startDate === endDate) {
-      if (startDate === currentYearMonthDay) {
-        betweenDatesMessage = `sporting ${eventPluralization} today`;
-      } else {
-        betweenDatesMessage = `sporting ${eventPluralization} on ${start}`;
-      }
+      startDate === currentYearMonthDay
+        ? (betweenDatesMessage = `sporting ${eventPluralization} today`)
+        : (betweenDatesMessage = `sporting ${eventPluralization} on ${start}`);
     }
 
     if (sportingEvents.length > 0) {
@@ -246,20 +221,20 @@ const App = () => {
         <div className="container-fluid input-group-text m-1">
           <RadioModeButton
             id={radioSingleDateId}
-            checked={monoMode}
+            checked={monoSearchMode}
             onchange={handleDateRadioChange}
-            labelClassName={monoMode ? "btn btn-outline-success" : "btn btn-outline-danger"}
+            labelClassName={monoSearchMode ? "btn btn-outline-success" : "btn btn-outline-danger"}
             labelValue="Single Day"
           />
           <DateSelectorInput name="start-date-input" value={startDate} onChange={handleStartDateInputChange} />
-          {!monoMode && (
+          {!monoSearchMode && (
             <DateSelectorInput name="end-date-input" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
           )}
           <RadioModeButton
             id={radioDateRangeId}
-            checked={!monoMode}
+            checked={!monoSearchMode}
             onchange={handleDateRadioChange}
-            labelClassName={!monoMode ? "btn btn-outline-success" : "btn btn-outline-danger"}
+            labelClassName={!monoSearchMode ? "btn btn-outline-success" : "btn btn-outline-danger"}
             labelValue="Date Range"
           />
         </div>
