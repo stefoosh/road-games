@@ -13,7 +13,7 @@ import PopOverlay from "./Features/PopOverlay";
 import DateSelectorInput from "./Features/DateSelectorInput";
 import { SportingEvent } from "./Api/propTypes";
 import RadioModeButton from "./Features/RadioModeButton";
-import { handleAsyncResponseJSON } from "./Utils/fetching";
+import { fetchUri } from "./Utils/fetching";
 import SearchableDataList from "./Features/SearchableDataList";
 
 const App = () => {
@@ -56,20 +56,6 @@ const App = () => {
 
   const [sportingEvents, setSportingEvents] = useState([]);
 
-  const mockFetch = () => {
-    if (startDate === currentYearMonthDay && endDate === currentYearMonthDay) {
-      setSportingEvents([new SportingEvent(1, [0.1276, 51.5072], "LondonPremiere", "Spurs")]);
-    } else if (startDate === currentYearMonthDay && endDate === "2022-11-08") {
-      const mockApi = [
-        new SportingEvent(696969, [16.3725, 48.208889], "Vienna Action", "I am content"),
-        new SportingEvent(123, [8.80777, 53.07516], "Bremen Fußball", "Herkunft"),
-      ];
-      setSportingEvents(mockApi);
-    } else {
-      setSportingEvents([]);
-    }
-  };
-
   const dateIsInThePast = (date) => {
     return new Date(date).getTime() < new Date(currentYearMonthDay).getTime();
   };
@@ -103,7 +89,6 @@ const App = () => {
       setMainAlert(new MainAlert("warning", "Start date must be before end date"));
       return;
     }
-    mockFetch();
   };
 
   class API {
@@ -115,7 +100,16 @@ const App = () => {
     static countriesBase = "/regional/countries";
     static countriesUri = API.url + API.countriesBase;
 
-    // constructor() {}
+    static statesBase = (countryName) => {
+      return `/regional/states?country_name=${countryName}`;
+    };
+    static statesUri = (countryName) => {
+      return API.url + API.statesBase(countryName);
+    };
+
+    constructor() {
+      // const windowLocationHostname = window.location.hostname;
+    }
   }
 
   const [countries, setCountries] = useState(undefined);
@@ -123,18 +117,13 @@ const App = () => {
   const [states, setStates] = useState(undefined);
   const [statesPlaceholder, setStatesPlaceholder] = useState("States or Provinces");
 
-  const fetchCountries = async () => {
-    return await fetch(API.countriesUri).then(handleAsyncResponseJSON);
-  };
+  const selectACountry = "Select a country...";
 
   useEffect(() => {
-    // mockFetch();
-    console.debug(`${API.countriesUri} fetching`);
-    fetchCountries()
+    fetchUri(API.countriesUri)
       .then((response) => {
         setCountries(response);
-        setCountriesPlaceholder("Select a country...");
-        console.debug(JSON.stringify(response));
+        setCountriesPlaceholder(selectACountry);
       })
       .catch((error) =>
         setMainAlert(new MainAlert("danger", `Error='${error}' ${API.countriesBase}, see browser console.`))
@@ -148,26 +137,48 @@ const App = () => {
       setMapZoom(5);
     } else if (userCountry.subregion === "South America") {
       setMapZoom(5);
+    } else if (userCountry.name === "Australia") {
+      setMapZoom(5);
     }
   };
 
   const handleCountryBlur = (event) => {
+    setStates(undefined);
+    document.getElementById("datalist-states-id").value = "";
+
     const userCountryInput = event.target.value;
     console.debug(`userCountryInput=${userCountryInput}`);
     const userCountry = countries.find((country) => country.name === userCountryInput);
+
     if (userCountry) {
       const newMapCenter = [userCountry.longitude, userCountry.latitude];
       console.debug(`newMapCenter=${newMapCenter}`);
       setMapCenter(newMapCenter);
       regionSpecificZoom(userCountry);
       setMainAlert(new MainAlert("info", `${userCountry.emoji} ${userCountry.name}`));
+
+      fetchUri(API.statesUri(userCountry.name))
+        .then((states) => {
+          setStates(states);
+          setStatesPlaceholder("Select a state/province/region...");
+        })
+        .catch((error) =>
+          setMainAlert(
+            new MainAlert("danger", `Error='${error}' ${API.statesBase(userCountry.name)}, see browser console.`)
+          )
+        );
     } else {
       setStates(undefined);
-      setMainAlert(new MainAlert("warning", `Choose a country. Invalid input='${userCountryInput}'`));
+      const message =
+        userCountryInput === "" ? selectACountry : `${selectACountry}  invalid input '${userCountryInput}'`;
+      setMainAlert(new MainAlert("warning", message));
     }
   };
 
-  const handleStatesBlur = () => {};
+  const handleStatesBlur = (event) => {
+    const { name, value } = event.target;
+    console.debug(`${name}=${value}`);
+  };
 
   useEffect(() => {
     const eventPluralization = sportingEvents.length === 1 ? "event" : "events";
@@ -215,7 +226,7 @@ const App = () => {
             placeholder={statesPlaceholder}
             onBlur={handleStatesBlur}
             disabled={states === undefined}
-            // options={}
+            options={states ? states.map((state) => <option key={state.id} value={state.name} />) : ""}
           />
         </div>
         <div className="container-fluid input-group-text m-1">
