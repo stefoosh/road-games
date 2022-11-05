@@ -38,7 +38,7 @@ import {
 const App = () => {
   const [mapCenter, setMapCenter] = useState(munichCoordinates);
   const [mapZoom, setMapZoom] = useState(initialMapZoom);
-
+  
   const refreshMap = (latitude, longitude, countryObject) => {
     regionSpecificZoom(countryObject, setMapZoom);
     setMapCenterLog(latitude, longitude, setMapCenter);
@@ -221,7 +221,7 @@ const App = () => {
             inputId="datalist-country-id"
             dataListId="datalist-country-options"
             placeholder={countriesPlaceholder}
-            disabled={false}
+            disabled={countries === undefined}
             onBlur={handleCountryBlur}
             options={
               countries &&
