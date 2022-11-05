@@ -8,7 +8,7 @@ export const API = class API {
   static fqdn = runningInProduction()
     ? "road-games-api-prod-hella-jr-39q261.mo2.mogenius.io"
     : window.location.hostname.endsWith(".road-games.pages.dev")
-    ? "116.86.138.123:8080"
+    ? "road-games-001-prod-hella-jr-39q261.mo2.mogenius.io"
     : "0.0.0.0:8080";
 
   static url = `${API.scheme}://${API.fqdn}`;
