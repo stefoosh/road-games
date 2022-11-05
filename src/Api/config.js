@@ -1,5 +1,5 @@
 const runningInProduction = () => {
-  return window.location.hostname === "road-games.stefoo.sh" && process.env.NODE_ENV === "production";
+  return window.location.hostname === "roadgames.stefoo.sh" && process.env.NODE_ENV === "production";
 };
 
 export const API = class API {
