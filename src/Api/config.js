@@ -2,7 +2,7 @@ export const API = class API {
   static scheme = process.env.NODE_ENV === "production" ? "https" : "http";
 
   static fqdn =
-    process.env.NODE_ENV === "production"
+    process.env.NODE_ENV === "production" && window.location.hostname === "roadgames.stefoo.sh"
       ? "road-games-api-prod-hella-jr-39q261.mo2.mogenius.io"
       : window.location.hostname.endsWith(".road-games.pages.dev")
       ? "road-games-001-prod-hella-jr-39q261.mo2.mogenius.io"
