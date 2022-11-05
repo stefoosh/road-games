@@ -1,12 +1,15 @@
-export const API = class API {
-  static scheme = process.env.NODE_ENV === "production" ? "https" : "http";
+const runningInProduction = () => {
+  return window.location.hostname === "road-games.stefoo.sh" && process.env.NODE_ENV === "production";
+};
 
-  static fqdn =
-    window.location.hostname === "road-games.stefoo.sh" && process.env.NODE_ENV === "production"
-      ? "road-games-api-prod-hella-jr-39q261.mo2.mogenius.io"
-      : window.location.hostname.endsWith(".road-games.pages.dev")
-      ? "116.86.138.123:8080"
-      : "0.0.0.0:8080";
+export const API = class API {
+  static scheme = runningInProduction() ? "https" : "http";
+
+  static fqdn = runningInProduction()
+    ? "road-games-api-prod-hella-jr-39q261.mo2.mogenius.io"
+    : window.location.hostname.endsWith(".road-games.pages.dev")
+    ? "116.86.138.123:8080"
+    : "0.0.0.0:8080";
 
   static url = `${API.scheme}://${API.fqdn}`;
 
