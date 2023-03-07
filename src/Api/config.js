@@ -3,7 +3,7 @@ export const API = class API {
 
   static fqdn =
     process.env.NODE_ENV === "production" && window.location.hostname === "roadgames.stefoo.sh"
-      ? "road-games-api-prod-hella-jr-39q261.mo2.mogenius.io"
+      ? "sportsdata-prod-hella-jr-39q261.mo2.mogenius.io"
       : window.location.hostname.endsWith(".road-games.pages.dev")
       ? "road-games-001-prod-hella-jr-39q261.mo2.mogenius.io"
       : "0.0.0.0:8080";
@@ -18,5 +18,13 @@ export const API = class API {
   };
   static statesUri = (countryName) => {
     return API.url + API.statesBase(countryName);
+  };
+
+  static gamesBase = (sportName, start, end) => {
+    return `/${sportName}/games/range?start=${start}&end=${end}`;
+  };
+
+  static gamesUri = (sportName, start, end) => {
+    return API.url + API.gamesBase(sportName, start, end);
   };
 };
