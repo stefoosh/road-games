@@ -7,7 +7,7 @@ import Overlay from "ol/Overlay";
 import { fromLonLat } from "ol/proj";
 import "./Map.css";
 import MapContext from "./MapContext";
-import { SportingEvent } from "../Api/propTypes";
+// import { SportingEvent } from "../Api/propTypes";
 
 const Map = ({ children, zoom, center, sportingEvents }) => {
   const mapRef = useRef();
@@ -26,19 +26,22 @@ const Map = ({ children, zoom, center, sportingEvents }) => {
     setMap(mapObject);
 
     return () => mapObject.setTarget(undefined);
+
+    // TODO: including these dependencies causes the location overlays to not render after searching a country+state
+    // }, [center, zoom]);
   }, []);
 
   useEffect(() => {
     if (!map) return;
 
     map.getView().setZoom(zoom);
-  }, [zoom]);
+  }, [map, zoom]);
 
   useEffect(() => {
     if (!map) return;
 
     map.getView().setCenter(center);
-  }, [center]);
+  }, [center, map]);
 
   const overlayHash = (overlays) => {
     let sum = 0.0;
@@ -54,17 +57,21 @@ const Map = ({ children, zoom, center, sportingEvents }) => {
       const newOverlays = [];
 
       sportingEvents.forEach((sportingEvent) => {
+        const lonLat = [sportingEvent.location.GeoLong, sportingEvent.location.GeoLat];
+        const markerId = `${sportingEvent.StadiumID}-marker`;
+
         const marker = new Overlay({
-          position: fromLonLat(sportingEvent.lonLat),
+          position: fromLonLat(lonLat),
           positioning: "center-center",
-          element: document.getElementById(sportingEvent.markerId),
+          element: document.getElementById(markerId),
           stopEvent: false,
         });
         newOverlays.push(marker);
 
+        const labelId = `${sportingEvent.StadiumID}-label`;
         const label = new Overlay({
-          position: fromLonLat(sportingEvent.lonLat),
-          element: document.getElementById(sportingEvent.labelId),
+          position: fromLonLat(lonLat),
+          element: document.getElementById(labelId),
         });
         newOverlays.push(label);
       });
@@ -97,6 +104,7 @@ const Map = ({ children, zoom, center, sportingEvents }) => {
 };
 
 Map.propTypes = {
-  sportingEvents: PropTypes.arrayOf(SportingEvent.shape()).isRequired,
+  // sportingEvents: PropTypes.arrayOf(SportingEvent.shape()).isRequired,
+  sportingEvents: PropTypes.array.isRequired,
 };
 export default Map;

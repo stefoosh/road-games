@@ -7,7 +7,7 @@ import "ol/ol.css";
 import Alert from "react-bootstrap/Alert";
 
 import { API } from "./Api/config";
-import { SportingEvent } from "./Api/propTypes";
+// import { SportingEvent } from "./Api/propTypes";
 import DateSelectorInput from "./Features/DateSelectorInput";
 import FullScreenControl from "./Features/FullScreenControl";
 import PopOverlay from "./Features/PopOverlay";
@@ -17,7 +17,7 @@ import TileLayer from "./Features/TileLayer";
 import {
   currentYearMonthDay,
   initialMapZoom,
-  munichCoordinates,
+  kansasCoordinates,
   radioDateRangeId,
   radioSingleDateId,
   selectACountry,
@@ -36,9 +36,9 @@ import {
 } from "./Utils/runtime";
 
 const App = () => {
-  const [mapCenter, setMapCenter] = useState(munichCoordinates);
+  const [mapCenter, setMapCenter] = useState(kansasCoordinates);
   const [mapZoom, setMapZoom] = useState(initialMapZoom);
-  
+
   const refreshMap = (latitude, longitude, countryObject) => {
     regionSpecificZoom(countryObject, setMapZoom);
     setMapCenterLog(latitude, longitude, setMapCenter);
@@ -56,6 +56,7 @@ const App = () => {
   };
 
   const handleDateRadioChange = (event) => {
+    // eslint-disable-next-line no-unused-vars
     const { name, value } = event.target;
 
     setMonoSearchMode(name === radioSingleDateId);
@@ -89,7 +90,15 @@ const App = () => {
       setMainAlert(new MainAlert("warning", "Start date must be before end date"));
       return;
     }
-    mockFetch();
+    // mockFetch();
+
+    fetchUri(API.gamesUri("nhl", startDate, endDate))
+      .then((response) => {
+        setSportingEvents(response);
+      })
+      .catch((error) => {
+        setMainAlert(new MainAlert("danger", `Error=${error}', see browser console.`));
+      });
   };
 
   const [countries, setCountries] = useState(undefined);
@@ -157,19 +166,19 @@ const App = () => {
     }
   };
 
-  const mockFetch = () => {
-    if (startDate === currentYearMonthDay && endDate === currentYearMonthDay) {
-      setSportingEvents([new SportingEvent(1, [0.1276, 51.5072], "LondonPremiere", "Spurs")]);
-    } else if (startDate === currentYearMonthDay && endDate === "2022-11-08") {
-      const mockApi = [
-        new SportingEvent(696969, [16.3725, 48.208889], "Vienna Action", "I am content"),
-        new SportingEvent(123, [8.80777, 53.07516], "Bremen Fußball", "Herkunft"),
-      ];
-      setSportingEvents(mockApi);
-    } else {
-      setSportingEvents([]);
-    }
-  };
+  // const mockFetch = () => {
+  //   if (startDate === currentYearMonthDay && endDate === currentYearMonthDay) {
+  //     setSportingEvents([new SportingEvent(1, [0.1276, 51.5072], "LondonPremiere", "Spurs")]);
+  //   } else if (startDate === currentYearMonthDay && endDate === "2022-11-08") {
+  //     const mockApi = [
+  //       new SportingEvent(696969, [16.3725, 48.208889], "Vienna Action", "I am content"),
+  //       new SportingEvent(123, [8.80777, 53.07516], "Bremen Fußball", "Herkunft"),
+  //     ];
+  //     setSportingEvents(mockApi);
+  //   } else {
+  //     setSportingEvents([]);
+  //   }
+  // };
 
   useEffect(() => {
     const eventPluralization = sportingEvents.length === 1 ? "event" : "events";
@@ -190,31 +199,50 @@ const App = () => {
     } else {
       setMainAlert(new MainAlert("dark", `Found no ${betweenDatesMessage}`));
     }
-  }, [sportingEvents]);
+  }, [endDate, sportingEvents, startDate]);
 
   return (
     <>
-      <div className="container-fluid">
-        <div className="container-fluid input-group-text m-1">
-          <RadioModeButton
-            id={radioSingleDateId}
-            checked={monoSearchMode}
-            onchange={handleDateRadioChange}
-            labelClassName={monoSearchMode ? "btn btn-outline-success" : "btn btn-outline-danger"}
-            labelValue="Single Day"
-          />
-          <RadioModeButton
-            id={radioDateRangeId}
-            checked={!monoSearchMode}
-            onchange={handleDateRadioChange}
-            labelClassName={!monoSearchMode ? "btn btn-outline-success" : "btn btn-outline-danger"}
-            labelValue="Date Range"
-          />
-          <DateSelectorInput name="start-date-input" value={startDate} onChange={handleStartDateInputChange} />
-          {!monoSearchMode && (
-            <DateSelectorInput name="end-date-input" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-          )}
-        </div>
+      <div className="container-fluid input-group-text m-1">
+        <RadioModeButton
+          id={radioSingleDateId}
+          checked={monoSearchMode}
+          onchange={handleDateRadioChange}
+          labelClassName={monoSearchMode ? "btn btn-outline-success" : "btn btn-outline-danger"}
+          labelValue="Single Day"
+        />
+        <RadioModeButton
+          id={radioDateRangeId}
+          checked={!monoSearchMode}
+          onchange={handleDateRadioChange}
+          labelClassName={!monoSearchMode ? "btn btn-outline-success" : "btn btn-outline-danger"}
+          labelValue="Date Range"
+        />
+        <DateSelectorInput name="start-date-input" value={startDate} onChange={handleStartDateInputChange} />
+        {!monoSearchMode && (
+          <DateSelectorInput name="end-date-input" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+        )}
+        <button type="button" className="form-control btn btn-primary" onClick={() => validateDates()}>
+          Search
+        </button>
+      </div>
+      <div>
+        <Map center={fromLonLat(mapCenter)} zoom={mapZoom} sportingEvents={sportingEvents}>
+          <TileLayer source={new OSM()} zIndex={0} />
+          <FullScreenControl />
+        </Map>
+        {sportingEvents &&
+          sportingEvents.length > 0 &&
+          sportingEvents.map((sportingEvent) => {
+            console.debug(sportingEvent);
+            return <PopOverlay key={sportingEvent.StadiumID} sportingEvent={sportingEvent} />;
+          })}
+        {/*<hr />*/}
+        {/*{JSON.stringify(sportingEvents, null, 2)}*/}
+
+        <Alert className="form-control" key="main-alert" variant={mainAlert.variant}>
+          {mainAlert.body}
+        </Alert>
 
         <div className="container-fluid input-group-text m-1">
           <SearchableDataList
@@ -241,27 +269,6 @@ const App = () => {
             options={states ? states.map((state) => <option key={state.id} value={state.name} />) : ""}
           />
         </div>
-
-        <button type="button" className="form-control btn btn-primary" onClick={() => validateDates()}>
-          Search
-        </button>
-        <Alert className="form-control" key="main-alert" variant={mainAlert.variant}>
-          {mainAlert.body}
-        </Alert>
-      </div>
-      <div>
-        <Map center={fromLonLat(mapCenter)} zoom={mapZoom} sportingEvents={sportingEvents}>
-          <TileLayer source={new OSM()} zIndex={0} />
-          <FullScreenControl />
-        </Map>
-        {sportingEvents &&
-          sportingEvents.length > 0 &&
-          sportingEvents.map((sportingEvent) => {
-            // console.debug(sportingEvent);
-            return <PopOverlay key={sportingEvent.key} sportingEvent={sportingEvent} />;
-          })}
-        <hr />
-        {JSON.stringify(sportingEvents, null, 2)}
       </div>
     </>
   );

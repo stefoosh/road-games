@@ -19,4 +19,12 @@ export const API = class API {
   static statesUri = (countryName) => {
     return API.url + API.statesBase(countryName);
   };
+
+  static gamesBase = (sportName, start, end) => {
+    return `/${sportName}/games/range?start=${start}&end=${end}`;
+  };
+
+  static gamesUri = (sportName, start, end) => {
+    return API.url + API.gamesBase(sportName, start, end);
+  };
 };
