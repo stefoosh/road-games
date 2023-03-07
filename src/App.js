@@ -7,7 +7,7 @@ import "ol/ol.css";
 import Alert from "react-bootstrap/Alert";
 
 import { API } from "./Api/config";
-// import { SportingEvent } from "./Api/propTypes";
+import { Location, SportingEvent } from "./Api/propTypes";
 import DateSelectorInput from "./Features/DateSelectorInput";
 import FullScreenControl from "./Features/FullScreenControl";
 import PopOverlay from "./Features/PopOverlay";
@@ -71,8 +71,33 @@ const App = () => {
   };
 
   const [sportingEvents, setSportingEvents] = useState([]);
-  const [mainAlert, setMainAlert] = useState(new MainAlert("primary", welcomeMessage));
+  const instantiateSportingEvents = (response) => {
+    return response.map((element) => {
+      return new SportingEvent(
+        element.StadiumID,
+        element.sport,
+        new Location(
+          element.location.StadiumID,
+          element.location.Name,
+          element.location.City,
+          element.location.State,
+          element.location.Country,
+          element.location.GeoLat,
+          element.location.GeoLong,
+          element.location.Capacity
+        ),
+        element.Status,
+        element.Day,
+        element.DateTime,
+        element.DateTimeUTC,
+        element.Updated,
+        element.AwayTeam,
+        element.HomeTeam
+      );
+    });
+  };
 
+  const [mainAlert, setMainAlert] = useState(new MainAlert("primary", welcomeMessage));
   const validateDates = () => {
     console.debug(`start ${startDate}`);
     console.debug(`end ${endDate}`);
@@ -90,11 +115,10 @@ const App = () => {
       setMainAlert(new MainAlert("warning", "Start date must be before end date"));
       return;
     }
-    // mockFetch();
 
     fetchUri(API.gamesUri("nhl", startDate, endDate))
       .then((response) => {
-        setSportingEvents(response);
+        setSportingEvents(instantiateSportingEvents(response));
       })
       .catch((error) => {
         setMainAlert(new MainAlert("danger", `Error=${error}', see browser console.`));
@@ -165,20 +189,6 @@ const App = () => {
       setMainAlert(new MainAlert("warning", `${prefix} - ${message}`));
     }
   };
-
-  // const mockFetch = () => {
-  //   if (startDate === currentYearMonthDay && endDate === currentYearMonthDay) {
-  //     setSportingEvents([new SportingEvent(1, [0.1276, 51.5072], "LondonPremiere", "Spurs")]);
-  //   } else if (startDate === currentYearMonthDay && endDate === "2022-11-08") {
-  //     const mockApi = [
-  //       new SportingEvent(696969, [16.3725, 48.208889], "Vienna Action", "I am content"),
-  //       new SportingEvent(123, [8.80777, 53.07516], "Bremen Fußball", "Herkunft"),
-  //     ];
-  //     setSportingEvents(mockApi);
-  //   } else {
-  //     setSportingEvents([]);
-  //   }
-  // };
 
   useEffect(() => {
     const eventPluralization = sportingEvents.length === 1 ? "event" : "events";

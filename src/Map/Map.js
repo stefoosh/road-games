@@ -7,7 +7,7 @@ import Overlay from "ol/Overlay";
 import { fromLonLat } from "ol/proj";
 import "./Map.css";
 import MapContext from "./MapContext";
-// import { SportingEvent } from "../Api/propTypes";
+import { SportingEvent } from "../Api/propTypes";
 
 const Map = ({ children, zoom, center, sportingEvents }) => {
   const mapRef = useRef();
@@ -57,21 +57,19 @@ const Map = ({ children, zoom, center, sportingEvents }) => {
       const newOverlays = [];
 
       sportingEvents.forEach((sportingEvent) => {
-        const lonLat = [sportingEvent.location.GeoLong, sportingEvent.location.GeoLat];
-        const markerId = `${sportingEvent.StadiumID}-marker`;
+        const lonLat = [sportingEvent.location.longitude, sportingEvent.location.latitude];
 
         const marker = new Overlay({
           position: fromLonLat(lonLat),
           positioning: "center-center",
-          element: document.getElementById(markerId),
+          element: document.getElementById(sportingEvent.markerId),
           stopEvent: false,
         });
         newOverlays.push(marker);
 
-        const labelId = `${sportingEvent.StadiumID}-label`;
         const label = new Overlay({
           position: fromLonLat(lonLat),
-          element: document.getElementById(labelId),
+          element: document.getElementById(sportingEvent.labelId),
         });
         newOverlays.push(label);
       });
@@ -104,7 +102,7 @@ const Map = ({ children, zoom, center, sportingEvents }) => {
 };
 
 Map.propTypes = {
-  // sportingEvents: PropTypes.arrayOf(SportingEvent.shape()).isRequired,
-  sportingEvents: PropTypes.array.isRequired,
+  sportingEvents: PropTypes.arrayOf(SportingEvent.shape()).isRequired,
+  // sportingEvents: PropTypes.array.isRequired,
 };
 export default Map;
