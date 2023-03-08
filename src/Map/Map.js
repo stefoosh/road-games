@@ -103,6 +103,5 @@ const Map = ({ children, zoom, center, sportingEvents }) => {
 
 Map.propTypes = {
   sportingEvents: PropTypes.arrayOf(SportingEvent.shape()).isRequired,
-  // sportingEvents: PropTypes.array.isRequired,
 };
 export default Map;
