@@ -13,10 +13,10 @@ export const SportingEvent = class SportingEvent {
     this.awayTeam = awayTeam;
     this.homeTeam = homeTeam;
 
-    this.key = `${this.StadiumID}-${this.homeTeam}`;
-    this.markerId = `${this.StadiumID}-marker`;
-    this.popoverId = `${this.StadiumID}-popover`;
-    this.labelId = `${this.StadiumID}-label`;
+    this.key = `${this.sport}-${this.StadiumID}-${this.dateTimeUtc}`;
+    this.markerId = `${this.key}-marker`;
+    this.popoverId = `${this.key}-popover`;
+    this.labelId = `${this.key}-label`;
   }
 
   static shape() {
