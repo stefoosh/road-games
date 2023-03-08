@@ -21,9 +21,21 @@ export const SportingEvent = class SportingEvent {
 
   static shape() {
     return PropTypes.shape({
-      stadiumId: PropTypes.number.isRequired,
-      location: PropTypes.object.isRequired,
+      StadiumID: PropTypes.number.isRequired,
       sport: PropTypes.string.isRequired,
+      location: Location.shape(),
+      status: PropTypes.string.isRequired,
+      day: PropTypes.string.isRequired,
+      dateTime: PropTypes.string.isRequired,
+      dateTimeUtc: PropTypes.string.isRequired,
+      updated: PropTypes.string.isRequired,
+      awayTeam: PropTypes.string.isRequired,
+      homeTeam: PropTypes.string.isRequired,
+
+      key: PropTypes.string.isRequired,
+      markerId: PropTypes.string.isRequired,
+      popoverId: PropTypes.string.isRequired,
+      labelId: PropTypes.string.isRequired,
     });
   }
 };
@@ -42,9 +54,14 @@ export const Location = class Location {
 
   static shape() {
     return PropTypes.shape({
-      stadiumId: PropTypes.number.isRequired,
+      capacity: PropTypes.number.isRequired,
+      city: PropTypes.string.isRequired,
+      country: PropTypes.string.isRequired,
       latitude: PropTypes.number.isRequired,
       longitude: PropTypes.number.isRequired,
+      name: PropTypes.string.isRequired,
+      stadiumId: PropTypes.number.isRequired,
+      state: PropTypes.string.isRequired,
     });
   }
 };

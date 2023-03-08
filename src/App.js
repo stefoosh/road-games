@@ -99,8 +99,8 @@ const App = () => {
 
   const [mainAlert, setMainAlert] = useState(new MainAlert("primary", welcomeMessage));
   const validateDates = () => {
-    console.debug(`start ${startDate}`);
-    console.debug(`end ${endDate}`);
+    // console.debug(`start ${startDate}`);
+    // console.debug(`end ${endDate}`);
 
     const prefix = `Start ${!monoSearchMode ? "and end" : ""} date must be`;
     if (startDate === "" || endDate === "" || startDate === undefined || endDate === undefined) {
@@ -144,7 +144,7 @@ const App = () => {
     document.getElementById("datalist-states-id").value = "";
 
     const userCountryInput = event.target.value;
-    console.debug(`userCountryInput=${userCountryInput}`);
+    // console.debug(`userCountryInput=${userCountryInput}`);
     const userCountry = countries.find((country) => country.name === userCountryInput);
 
     if (userCountry) {
@@ -174,7 +174,7 @@ const App = () => {
 
   const handleStatesBlur = (event) => {
     const userStateInput = event.target.value;
-    console.debug(`userStateInput=${userStateInput}`);
+    // console.debug(`userStateInput=${userStateInput}`);
 
     const activeCountryName = document.getElementById("datalist-country-id").value;
     const countryObject = countries.find((country) => country.name === activeCountryName);
@@ -244,7 +244,7 @@ const App = () => {
         {sportingEvents &&
           sportingEvents.length > 0 &&
           sportingEvents.map((sportingEvent) => {
-            console.debug(sportingEvent);
+            // console.debug(sportingEvent);
             return <PopOverlay key={sportingEvent.StadiumID} sportingEvent={sportingEvent} />;
           })}
         {/*<hr />*/}
