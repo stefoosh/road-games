@@ -5,6 +5,7 @@ import { fromLonLat } from "ol/proj";
 import "ol/ol.css";
 
 import Alert from "react-bootstrap/Alert";
+import Form from "react-bootstrap/Form";
 
 import { API } from "./Api/config";
 import { Location, SportingEvent } from "./Api/propTypes";
@@ -99,8 +100,8 @@ const App = () => {
 
   const [mainAlert, setMainAlert] = useState(new MainAlert("primary", welcomeMessage));
   const validateDates = () => {
-    console.debug(`start ${startDate}`);
-    console.debug(`end ${endDate}`);
+    // console.debug(`start ${startDate}`);
+    // console.debug(`end ${endDate}`);
 
     const prefix = `Start ${!monoSearchMode ? "and end" : ""} date must be`;
     if (startDate === "" || endDate === "" || startDate === undefined || endDate === undefined) {
@@ -116,27 +117,32 @@ const App = () => {
       return;
     }
 
-    fetchUri(API.gamesUri("nhl", startDate, endDate))
-      .then((response) => {
-        setSportingEvents(instantiateSportingEvents(response));
-      })
-      .catch((error) => {
-        setMainAlert(new MainAlert("danger", `Error=${error}', see browser console.`));
-      });
+    setSportingEvents([]);
+    ["mlb", "nhl"].forEach((selectedSportName) => {
+      fetchUri(API.gamesUri(selectedSportName, startDate, endDate))
+        .then((response) => {
+          setSportingEvents([...sportingEvents, ...instantiateSportingEvents(response)]);
+        })
+        .catch((error) => {
+          setMainAlert(new MainAlert("danger", `Error=${error}', see browser console.`));
+        });
+    });
   };
 
   const [countries, setCountries] = useState(undefined);
   const [countriesPlaceholder, setCountriesPlaceholder] = useState("Fetching countries...");
-
   useEffect(() => {
-    fetchUri(API.countriesUri)
-      .then((response) => {
-        setCountries(response);
-        setCountriesPlaceholder(selectACountry);
-      })
-      .catch((error) =>
-        setMainAlert(new MainAlert("danger", `Error='${error}' ${API.countriesBase}, see browser console.`))
-      );
+    // TODO: this is still fetching twice upon initial page load
+    if (countries === undefined) {
+      fetchUri(API.countriesUri)
+        .then((response) => {
+          setCountries(response);
+          setCountriesPlaceholder(selectACountry);
+        })
+        .catch((error) =>
+          setMainAlert(new MainAlert("danger", `Error='${error}' ${API.countriesBase}, see browser console.`))
+        );
+    }
   }, []);
 
   const handleCountryBlur = (event) => {
@@ -144,7 +150,7 @@ const App = () => {
     document.getElementById("datalist-states-id").value = "";
 
     const userCountryInput = event.target.value;
-    console.debug(`userCountryInput=${userCountryInput}`);
+    // console.debug(`userCountryInput=${userCountryInput}`);
     const userCountry = countries.find((country) => country.name === userCountryInput);
 
     if (userCountry) {
@@ -164,7 +170,7 @@ const App = () => {
     } else {
       setStates(undefined);
       const message =
-        userCountryInput === "" ? selectACountry : `${selectACountry}  invalid input '${userCountryInput}'`;
+        userCountryInput === "" ? selectACountry : `${selectACountry} invalid input '${userCountryInput}'`;
       setMainAlert(new MainAlert("warning", message));
     }
   };
@@ -174,7 +180,7 @@ const App = () => {
 
   const handleStatesBlur = (event) => {
     const userStateInput = event.target.value;
-    console.debug(`userStateInput=${userStateInput}`);
+    // console.debug(`userStateInput=${userStateInput}`);
 
     const activeCountryName = document.getElementById("datalist-country-id").value;
     const countryObject = countries.find((country) => country.name === activeCountryName);
@@ -236,6 +242,13 @@ const App = () => {
           Search
         </button>
       </div>
+      <div className="container-fluid input-group-text m-1">
+        <Form.Check inline disabled label="MLB" name="group1" type="checkbox" id="check1" checked={true} />
+        <Form.Check inline disabled label="NBA" name="group1" type="checkbox" id="check2" />
+        <Form.Check inline disabled label="NFL" name="group1" type="checkbox" id="check2" />
+        <Form.Check inline disabled label="NHL" name="group1" type="checkbox" id="check2" checked={true} />
+        <Form.Check inline disabled label="Soccer" name="group1" type="checkbox" id="check3" />
+      </div>
       <div>
         <Map center={fromLonLat(mapCenter)} zoom={mapZoom} sportingEvents={sportingEvents}>
           <TileLayer source={new OSM()} zIndex={0} />
@@ -244,8 +257,8 @@ const App = () => {
         {sportingEvents &&
           sportingEvents.length > 0 &&
           sportingEvents.map((sportingEvent) => {
-            console.debug(sportingEvent);
-            return <PopOverlay key={sportingEvent.StadiumID} sportingEvent={sportingEvent} />;
+            // console.debug(sportingEvent);
+            return <PopOverlay key={sportingEvent.key} sportingEvent={sportingEvent} />;
           })}
         {/*<hr />*/}
         {/*{JSON.stringify(sportingEvents, null, 2)}*/}

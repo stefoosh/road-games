@@ -8,6 +8,8 @@ const PopOverlay = ({ sportingEvent }) => {
     switch (sportName) {
       case "nhl":
         return "🏒";
+      case "mlb":
+        return "⚾";
       default:
         return "📅";
     }
@@ -36,8 +38,8 @@ const PopOverlay = ({ sportingEvent }) => {
         }
       >
         <a className="label" id={sportingEvent.labelId} target="_blank">
-          [{sportingEvent.sport.toUpperCase()}] {sportEmoji(sportingEvent.sport)} {sportingEvent.homeTeam} vs{" "}
-          {sportingEvent.awayTeam}
+          [{sportingEvent.sport.toUpperCase()}] {sportEmoji(sportingEvent.sport)}
+          {sportingEvent.awayTeam} @ {sportingEvent.homeTeam}
         </a>
       </OverlayTrigger>
     </div>
