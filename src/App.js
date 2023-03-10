@@ -34,7 +34,9 @@ import {
   MainAlert,
   regionSpecificZoom,
   setMapCenterLog,
+  toUtcString,
 } from "./Utils/runtime";
+import { Tab, Table, Tabs } from "react-bootstrap";
 
 const App = () => {
   const [mapCenter, setMapCenter] = useState(kansasCoordinates);
@@ -71,7 +73,19 @@ const App = () => {
     }
   };
 
-  const [sportingEvents, setSportingEvents] = useState([]);
+  const [checkBoxen, setCheckBoxen] = useState({
+    MLB: true,
+    NHL: true,
+  });
+  const handleCheckBoxChange = (event) => {
+    event.persist();
+    setCheckBoxen((prevState) => ({
+      ...prevState,
+      [event.target.name]: !prevState[event.target.name],
+    }));
+    // validateDates().then();
+  };
+
   const instantiateSportingEvents = (response) => {
     return response.map((element) => {
       return new SportingEvent(
@@ -98,8 +112,9 @@ const App = () => {
     });
   };
 
+  const [groupedResults, setGroupedResults] = useState({});
   const [mainAlert, setMainAlert] = useState(new MainAlert("primary", welcomeMessage));
-  const validateDates = () => {
+  const validateDates = async () => {
     // console.debug(`start ${startDate}`);
     // console.debug(`end ${endDate}`);
 
@@ -117,17 +132,33 @@ const App = () => {
       return;
     }
 
-    setSportingEvents([]);
-    ["mlb", "nhl"].forEach((selectedSportName) => {
-      fetchUri(API.gamesUri(selectedSportName, startDate, endDate))
-        .then((response) => {
-          setSportingEvents([...sportingEvents, ...instantiateSportingEvents(response)]);
-        })
-        .catch((error) => {
-          setMainAlert(new MainAlert("danger", `Error=${error}', see browser console.`));
-        });
+    Object.entries(checkBoxen).forEach(([sportName, isChecked]) => {
+      if (isChecked) {
+        fetchUri(API.gamesUri(sportName.toLowerCase(), startDate, endDate))
+          .then((response) => {
+            setGroupedResults((prevState) => ({
+              ...prevState,
+              [sportName]: instantiateSportingEvents(response),
+            }));
+          })
+          .catch((error) => {
+            setMainAlert(new MainAlert("danger", `Error=${error}', see browser console.`));
+          });
+      } else {
+        setGroupedResults((prevState) => ({
+          ...prevState,
+          [sportName]: [],
+        }));
+      }
     });
   };
+
+  const [sportingEvents, setSportingEvents] = useState([]);
+  useEffect(() => {
+    if (Object.keys(groupedResults)) {
+      setSportingEvents(Object.values(groupedResults).flat());
+    }
+  }, [groupedResults]);
 
   const [countries, setCountries] = useState(undefined);
   const [countriesPlaceholder, setCountriesPlaceholder] = useState("Fetching countries...");
@@ -243,11 +274,46 @@ const App = () => {
         </button>
       </div>
       <div className="container-fluid input-group-text m-1">
-        <Form.Check inline disabled label="MLB" name="group1" type="checkbox" id="check1" checked={true} />
-        <Form.Check inline disabled label="NBA" name="group1" type="checkbox" id="check2" />
-        <Form.Check inline disabled label="NFL" name="group1" type="checkbox" id="check2" />
-        <Form.Check inline disabled label="NHL" name="group1" type="checkbox" id="check2" checked={true} />
+        {Object.entries(checkBoxen).map(([sportName, isChecked]) => {
+          return (
+            <Form.Check
+              inline
+              id={sportName}
+              key={sportName}
+              label={sportName}
+              name={sportName}
+              type="checkbox"
+              checked={isChecked}
+              onChange={handleCheckBoxChange}
+            />
+          );
+        })}
+        <Form.Check inline disabled label="NBA" name="group1" type="checkbox" id="check3" />
+        <Form.Check inline disabled label="NFL" name="group1" type="checkbox" id="check3" />
         <Form.Check inline disabled label="Soccer" name="group1" type="checkbox" id="check3" />
+        <SearchableDataList
+          inputId="datalist-country-id"
+          dataListId="datalist-country-options"
+          placeholder={countriesPlaceholder}
+          disabled={countries === undefined}
+          onBlur={handleCountryBlur}
+          options={
+            countries &&
+            countries.map((country) => (
+              <option key={country.id} value={country.name}>
+                {country.emoji} {country.iso2}
+              </option>
+            ))
+          }
+        />
+        <SearchableDataList
+          inputId="datalist-states-id"
+          dataListId="datalist-states-options"
+          placeholder={statesPlaceholder}
+          onBlur={handleStatesBlur}
+          disabled={states === undefined || (states && states.length === 0)}
+          options={states ? states.map((state) => <option key={state.id} value={state.name} />) : ""}
+        />
       </div>
       <div>
         <Map center={fromLonLat(mapCenter)} zoom={mapZoom} sportingEvents={sportingEvents}>
@@ -266,33 +332,62 @@ const App = () => {
         <Alert className="form-control" key="main-alert" variant={mainAlert.variant}>
           {mainAlert.body}
         </Alert>
-
-        <div className="container-fluid input-group-text m-1">
-          <SearchableDataList
-            inputId="datalist-country-id"
-            dataListId="datalist-country-options"
-            placeholder={countriesPlaceholder}
-            disabled={countries === undefined}
-            onBlur={handleCountryBlur}
-            options={
-              countries &&
-              countries.map((country) => (
-                <option key={country.id} value={country.name}>
-                  {country.emoji} {country.iso2}
-                </option>
-              ))
-            }
-          />
-          <SearchableDataList
-            inputId="datalist-states-id"
-            dataListId="datalist-states-options"
-            placeholder={statesPlaceholder}
-            onBlur={handleStatesBlur}
-            disabled={states === undefined || (states && states.length === 0)}
-            options={states ? states.map((state) => <option key={state.id} value={state.name} />) : ""}
-          />
-        </div>
       </div>
+
+      <Tabs defaultActiveKey="profile" id="uncontrolled-tab-example" className="mb-3">
+        {Object.entries(groupedResults).map(([sportName, results]) => {
+          return (
+            <Tab
+              key={sportName}
+              eventKey={sportName}
+              title={sportName + "(" + results.length + ")"}
+              disabled={results.length === 0}
+            >
+              <div className="container-fluid m-1">
+                <Table striped size="sm">
+                  <thead>
+                    <tr>
+                      <th>Sport</th>
+                      <th>Away Team</th>
+                      <th>Home Team</th>
+                      {/*<th>Day</th>*/}
+                      <th>Time</th>
+                      <th>UTC</th>
+                      <th>Venue</th>
+                      <th>City</th>
+                      <th>State</th>
+                      <th>Country</th>
+                      {/*<th>Status (Last Updated)</th>*/}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {results.map((sportingEvent) => {
+                      return (
+                        <tr key={sportingEvent.key}>
+                          <td>{sportingEvent.sport.toUpperCase()}</td>
+                          <td>{sportingEvent.awayTeam}</td>
+                          <td>{sportingEvent.homeTeam}</td>
+                          {/*<td>{sportingEvent.day}</td>*/}
+                          <td>{toUtcString(sportingEvent.dateTime)}</td>
+                          <td>{toUtcString(sportingEvent.dateTimeUtc)}</td>
+                          <td>{sportingEvent.location.name}</td>
+                          <td>{sportingEvent.location.city}</td>
+                          <td>{sportingEvent.location.state}</td>
+                          <td>{sportingEvent.location.country}</td>
+                          {/*<td>*/}
+                          {/*  {sportingEvent.status}*/}
+                          {/*  <br />({sportingEvent.updated})*/}
+                          {/*</td>*/}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </Table>
+              </div>
+            </Tab>
+          );
+        })}
+      </Tabs>
     </>
   );
 };

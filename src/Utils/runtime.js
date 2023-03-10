@@ -14,6 +14,10 @@ export const convertMDYtoHumanFormat = (mdy) => {
   return new Date(mdy).toDateString();
 };
 
+export const toUtcString = (rawDateString) => {
+  return new Date(Date.parse(rawDateString)).toUTCString();
+};
+
 export const regionSpecificZoom = (userCountry, setMapZoom) => {
   switch (userCountry) {
     case userCountry.region === "Europe":
