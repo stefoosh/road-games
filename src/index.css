@@ -22,8 +22,8 @@ a.label {
 }
 
 div.marker {
-  width: 20px;
-  height: 20px;
+  width: 10px;
+  height: 10px;
   border: 1px solid #088;
   border-radius: 10px;
   background-color: blue;
