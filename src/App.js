@@ -47,7 +47,7 @@ const App = () => {
     setMapCenterLog(latitude, longitude, setMapCenter);
   };
 
-  const [monoSearchMode, setMonoSearchMode] = useState(true);
+  const [monoSearchMode, setMonoSearchMode] = useState(false);
   const [startDate, setStartDate] = useState(currentYearMonthDay);
   const [endDate, setEndDate] = useState(currentYearMonthDay);
 
@@ -334,7 +334,11 @@ const App = () => {
         </Alert>
       </div>
 
-      <Tabs defaultActiveKey="profile" id="uncontrolled-tab-example" className="mb-3">
+      <Tabs
+        // activeKey={Object.entries(groupedResults).reduce((max, sport) => (max.length > sport.length ? max : sport)).}
+        id="uncontrolled-tab-example"
+        className="mb-3"
+      >
         {Object.entries(groupedResults).map(([sportName, results]) => {
           return (
             <Tab
