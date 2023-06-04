@@ -14,6 +14,5 @@ Find sporting events in a geographic radius by date range
 npm run build && npm start
 ```
 
-- Stored objects are synchronized into a MongoDB Atlas via https://github.com/stefoosh/sportsdata-synchronizer
-
+- Stored objects are synchronized into a MongoDB Atlas via [sh.stefoosh.sportsdata.sync.Importer](https://github.com/stefoosh/sportsdata/blob/main/sync/src/main/java/sh/stefoosh/sportsdata/sync/Importer.java)
 - [Pull requests](https://github.com/stefoosh/road-games/pulls?q=is%3Apr+is%3Aclosed) build and deploy to Cloudflare Pages
